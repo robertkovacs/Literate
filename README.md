@@ -11,4 +11,4 @@ This fork introduces the following changes:
 
 The maintainers of this fork thank Zachary Yedidia, the original author for his work.
 
-You can view the main website about Literate [here](http://literate.zbyedidia.webfactional.com) including a [manual](http://literate.zbyedidia.webfactional.com/manual.php)  how to use Literate.
+You can view the main website of Literate [here](http://literate.zbyedidia.webfactional.com) including a [manual](http://literate.zbyedidia.webfactional.com/manual.php)  how to use Literate.
