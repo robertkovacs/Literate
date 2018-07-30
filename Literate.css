@@ -1,0 +1,75 @@
+html {
+ 	font-family:"Avenir", "Helvetica neue", sans-serif;
+}
+
+body {
+  background: #ffffff;
+  color: #555;
+}
+
+h1, body {
+    color: rgb(100, 100, 100);
+    font-weight: normal;
+}
+
+h2 {
+  font-weight: normal;
+}
+
+h3 {
+  font-weight: normal;
+}
+
+h4 {
+  font-weight: normal;
+}
+
+h5 {
+  font-weight: normal;
+}
+
+h6 {
+  font-weight: normal;
+}
+
+p, li, dd, dt, th, td {
+	font-size: 14px;
+}
+
+p {
+	padding-bottom: 10px;
+}
+
+pre {
+	padding-top: 0px;
+	margin-top: 0px;
+}
+
+p:not(.notp){
+	text-indent: 0em;
+}
+
+a:link {
+    color: rgb(22, 123, 204);
+}
+
+/* visited link */
+a:visited {
+    color: rgb(22, 123, 204);
+}
+
+/* mouse over link */
+a:hover {
+    color: rgb(22, 123, 204);
+}
+
+/* selected link */
+a:active {
+    color: rgb(22, 123, 204);
+}
+
+th, td {
+    padding-right: 10px;
+    padding-bottom: 5px;
+    vertical-align: top;
+}
