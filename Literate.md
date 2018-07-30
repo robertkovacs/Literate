@@ -104,14 +104,16 @@ commands may be overwritten by chapters or even sections). It also has the file 
 originally came from.
 
 ```d
-class Program {
+class Program 
+{
     public string title;
     public Command[] commands;
     public Chapter[] chapters;
     public string file;
     public string text;
 
-    this() {
+    this() 
+    {
         commands = [];
         chapters = [];
     }
@@ -126,7 +128,8 @@ on for the moment) the Program's file and the Chapter's file will be the same. A
 also has a minor number and a major number;
 
 ```d
-class Chapter {
+class Chapter 
+{
     public string title;
     public Command[] commands;
     public Section[] sections;
@@ -135,17 +138,16 @@ class Chapter {
     public int majorNum;
     public int minorNum;
 
-    this() {
+    this() 
+    {
         commands = [];
         sections = [];
     }
 
-    string num() {
-        if (minorNum != 0) {
-            return to!string(majorNum) ~ "." ~ to!string(minorNum);
-        } else {
-            return to!string(majorNum);
-        }
+    string num() 
+    {
+        if (minorNum != 0) return to!string(majorNum) ~ "." ~ to!string(minorNum);        
+        else return to!string(majorNum);  
     }
 }
 ```
@@ -172,24 +174,26 @@ support functions are needed to handle the number array seamlessly:
   description of `parseChapter`).
 
 ```d
-class Section {
+class Section 
+{
     public string title;
     public Command[] commands;
     public Block[] blocks;
     public int[6] num;
     public int level;
 
-    this() {
+    this() 
+    {
         commands = [];
         blocks = [];
     }
 
-    string numToString() {
+    string numToString() 
+    {
         string numString;
-        for(int i = 5; i >= 0; i--) {
-            if (numString == "" && num[i] == 0) {
-                continue;
-            }
+        for(int i = 5; i >= 0; i--) 
+        {
+            if (numString == "" && num[i] == 0) continue;
             numString = to!string(num[i]) ~ (numString == "" ? "" : ".") ~ numString;
         }
         return numString;
@@ -206,7 +210,8 @@ called `text()` which just returns the string of the text it contains. A block a
 a `codeType` and a `commentString`.
 
 ```d
-class Block {
+class Block 
+{
     public Line startLine;
     public string name;
     public bool isCodeblock;
@@ -218,20 +223,21 @@ class Block {
 
     public Modifier[] modifiers;
 
-    this() {
+    this() 
+    {
         lines = [];
         modifiers = [];
     }
 
-    string text() {
+    string text() 
+    {
         string text = "";
-        foreach (line; lines) {
-            text ~= line.text ~ "\n";
-        }
+        foreach (line; lines) text ~= line.text ~ "\n";
         return text;
     }
 
-    Block dup() {
+    Block dup() 
+    {
         Block b = new Block();
         b.startLine = startLine;
         b.name = name;
@@ -240,10 +246,8 @@ class Block {
         b.commentString = commentString;
         b.modifiers = modifiers;
 
-        foreach (Line l; lines) {
-            b.lines ~= l.dup();
-        }
-
+        foreach (Line l; lines) b.lines ~= l.dup();
+        
         return b;
     }
 }
@@ -254,12 +258,12 @@ class Block {
 A command is quite simple. It has a name, and any arguments that are passed.
 
 ```d
-class Command {
+class Command 
+{
     public string name;
     public string args;
     public int lineNum;
     public string filename;
-    this() {}
 }
 ```
 
@@ -270,18 +274,21 @@ text for the line itself.
 
 
 ```d
-class Line {
+class Line 
+{
     public string file;
     public int lineNum;
     public string text;
 
-    this(string text, string file, int lineNum) {
+    this(string text, string file, int lineNum) 
+    {
         this.text = text;
         this.file = file;
         this.lineNum = lineNum;
     }
 
-    Line dup() {
+    Line dup() 
+    {
         return new Line(text, file, lineNum);
     }
 }
@@ -295,13 +302,15 @@ because you can make multiple changes (search and replaces) to one file. In orde
 keep track of the current change, an index is also stored.
 
 ```d
-class Change {
+class Change 
+{
     public string filename;
     public string[] searchText;
     public string[] replaceText;
     public int index;
 
-    this() {
+    this() 
+    {
         searchText = [];
         replaceText = [];
         index = 0;
@@ -336,7 +345,8 @@ Here is an example book:
         [Subchapter 1](chapter2/example1.lit)
 
 ```d
-Program parseProgram(Program p, string src) {
+Program parseProgram(Program p, string src) 
+{
     string filename = p.file;
     bool hasChapters;
 
@@ -344,21 +354,31 @@ Program parseProgram(Program p, string src) {
     int lineNum;
     int majorNum;
     int minorNum;
-    foreach (line; lines) {
+    foreach (line; lines) 
+    {
         lineNum++;
 
-        if (line.startsWith("@title")) {
+        if (line.startsWith("@title")) 
+        {
             p.title = strip(line[6..$]);
-        } else if (line.startsWith("@book")) {
+        } 
+        else if (line.startsWith("@book")) 
+        {
             continue;
-        } else if (auto matches = matchFirst(line, regex(r"\[(?P<chapterName>.*)\]\((?P<filepath>.*)\)"))) {
-            if (matches["filepath"] == "") {
+        } 
+        else if (auto matches = matchFirst(line, regex(r"\[(?P<chapterName>.*)\]\((?P<filepath>.*)\)"))) 
+        {
+            if (matches["filepath"] == "") 
+            {
                 error(filename, lineNum, "No filepath for " ~ matches["chapterName"]);
                 continue;
             }
-            if (leadingWS(line).length > 0) {
+            if (leadingWS(line).length > 0) 
+            {
                 minorNum++;
-            } else {
+            } 
+            else 
+            {
                 majorNum++;
                 minorNum = 0;
             }
@@ -370,7 +390,9 @@ Program parseProgram(Program p, string src) {
 
             p.chapters ~= parseChapter(c, readall(File(matches["filepath"])));
             hasChapters = true;
-        } else {
+        } 
+        else 
+        {
             p.text ~= line ~ "\n";
         }
     }
@@ -387,18 +409,22 @@ the contents of the file that was included. Then we loop through each line in th
 and parse it, provided that it is not a comment (starting with `//`);
 
 ```d
-Chapter parseChapter(Chapter chapter, string src) {
+Chapter parseChapter(Chapter chapter, string src) 
+{
     @{Initialize some variables}
     @{Increase section number}
 
     string[] blocks = [];
 
-    string include(string file) {
-        if (file == filename) {
+    string include(string file) 
+    {
+        if (file == filename) 
+        {
             error(filename, 1, "Recursive include");
             return "";
         }
-        if (!exists(file)){
+        if (!exists(file))
+        {
             error(filename, 1, "File " ~ file ~ " does not exist");
             return "";
         }
@@ -409,20 +435,20 @@ Chapter parseChapter(Chapter chapter, string src) {
     /* src = std.regex.replaceAll!(match => include(match[1]))(src, regex(`\n@include (.*)`)); */
     string[] linesStr = src.split("\n");
     Line[] lines;
-    foreach (lineNum, line; linesStr) {
+    foreach (lineNum, line; linesStr) 
+    {
         lines ~= new Line(line, filename, cast(int) lineNum+1);
     }
 
-    for (int j = 0; j < lines.length; j++) {
+    for (int j = 0; j < lines.length; j++) 
+    {
         auto lineObj = lines[j];
         filename = lineObj.file;
         auto lineNum = lineObj.lineNum;
         auto line = lineObj.text;
 
-        if (strip(line).startsWith("//") && !inCodeblock) {
-            continue;
-        }
-
+        if (strip(line).startsWith("//") && !inCodeblock) continue;
+        
         @{Parse the line}
     }
     @{Close the last section}
@@ -472,24 +498,29 @@ When parsing a line, we are either inside a code block, or inside a prose block,
 from one to the other. So we'll have an if statement to separate the two.
 
 ```d
-if (!inCodeblock) {
+if (!inCodeblock) 
+{
     // This might be a change block
     @{Parse change block}
     @{Parse a command}
     @{Parse a title command}
     @{Parse a section definition}
     @{Parse the beginning of a code block}
-    else if (curBlock !is null) {
-        if (line.split().length > 1) {
-            if (commands.canFind(line.split()[0])) {
-                continue;
-            }
+    else if (curBlock !is null) 
+    {
+        if (line.split().length > 1) 
+        {
+            if (commands.canFind(line.split()[0])) continue;
         }
         @{Add the line to the list of lines}
     }
-} else if (startsWith(line, "```")) {
+} 
+else if (startsWith(line, "```")) 
+{
     @{Begin a new prose block}
-} else if (curBlock !is null) {
+} 
+else if (curBlock !is null) 
+{
     @{Add the line to the list of lines}
 }
 ```
@@ -507,35 +538,35 @@ the `@include` command to the list of chapter commands.
 
 #### Parse a command
 ```d
-if (line.split().length > 1) {
-    if (commands.canFind(line.split()[0])) {
+if (line.split().length > 1) 
+{
+    if (commands.canFind(line.split()[0])) 
+    {
         Command cmd = new Command();
         cmd.name = line.split()[0];
         auto index = cmd.name.length;
         cmd.args = strip(line[index..$]);
         cmd.lineNum = lineNum;
         cmd.filename = filename;
-        if (cmd.args == "none") {
-            cmd.args = "";
-        }
-
-        if (cmd.name == "@include") {
+        if (cmd.args == "none") cmd.args = "";
+        
+        if (cmd.name == "@include") 
+        {
             Line[] includedLines;
             string fileSrc = readall(File(cmd.args));
-            foreach (includedLineNum, includedLine; fileSrc.split("\n")) {
+            foreach (includedLineNum, includedLine; fileSrc.split("\n")) 
+            {
                 auto includedLineObj = new Line(includedLine, cmd.args, cast(int) includedLineNum + 1);
                 includedLines ~= includedLineObj;
             }
-            if (includedLines.length > 0) {
+            if (includedLines.length > 0) 
+            {
                 lines = lines[0 .. lineNum] ~ includedLines ~ lines[lineNum .. $];
             }
         }
 
-        if (curSection is null) {
-            chapter.commands ~= cmd;
-        } else {
-            curSection.commands ~= cmd;
-        }
+        if (curSection is null) chapter.commands ~= cmd;       
+        else curSection.commands ~= cmd;
     }
 }
 ```
@@ -544,7 +575,8 @@ Parsing an `@title` command is even simpler.
 
 #### Parse a title command
 ```d
-if (startsWith(line, "@title")) {
+if (startsWith(line, "@title")) 
+{
     chapter.title = strip(line[6..$]);
 }
 ```
@@ -556,24 +588,31 @@ of sections for the chapter, and then we should create a new section, which beco
 current section.
 
 ```d
-else if (line.startsWith("#")) {
-    if (curBlock !is null && !curBlock.isCodeblock) {
-        if (strip(curBlock.text()) != "") {
+else if (line.startsWith("#")) 
+{
+    if (curBlock !is null && !curBlock.isCodeblock) 
+    {
+        if (strip(curBlock.text()) != "") 
+        {
             curSection.blocks ~= curBlock;
         }
-    } else if (curBlock !is null && curBlock.isCodeblock) {
+    } else if (curBlock !is null && curBlock.isCodeblock) 
+    {
         error(curBlock.startLine.file, curBlock.startLine.lineNum, "Unclosed block {" ~ curBlock.name ~ "}");
     }
     // Make sure the section exists
-    if (curSection !is null) {
+    if (curSection !is null) 
+    {
         chapter.sections ~= curSection;
     }
     int hashMarkCounter = 0;
-    while (line.startsWith("#")) {
+    while (line.startsWith("#")) 
+    {
         hashMarkCounter++;
         line.popFront();
     }
-    if (hashMarkCounter > 6) {
+    if (hashMarkCounter > 6) 
+    {
         error(filename, lineNum, "Too many hashmarks");
     }
     curSection = new Section();
@@ -596,11 +635,14 @@ When we increase the number of a certain level, all lower levels need to be
 zeroed out. The `increaseSectionNum` function does this job for us.
 
 ```d
-void increaseSectionNum(int level) {
-    if (level > 5) {
+void increaseSectionNum(int level) 
+{
+    if (level > 5) 
+    {
         throw new Exception("Levels higher than 5 are not supported in 'increaseSectionNum'");
     }
-    for (int i = 5; i > level; i--) {
+    for (int i = 5; i > level; i--) 
+    {
         sectionNum[i] = 0;
     }
     sectionNum[level]++;
@@ -614,15 +656,16 @@ Once a new codeblock starts, the old one must be appended to the current section
 blocks, and the current codeblock must be reset.
 
 ```d
-else if (matchAll(line, regex("^```.+"))) {
-    if (curSection is null) {
+else if (matchAll(line, regex("^```.+"))) 
+{
+    if (curSection is null) 
+    {
         error(chapter.file, lineNum, "You must define a section with # before writing a code block");
         continue;
     }
 
-    if (curBlock !is null) {
-        curSection.blocks ~= curBlock;
-    }
+    if (curBlock !is null) curSection.blocks ~= curBlock;
+    
     curBlock = new Block();
     curBlock.startLine = lineObj;
     curBlock.isCodeblock = true;
@@ -630,22 +673,33 @@ else if (matchAll(line, regex("^```.+"))) {
 
     @{Parse Modifiers}
 
-    if (blocks.canFind(curBlock.name)) {
-        if (!curBlock.modifiers.canFind(Modifier.redef) && !curBlock.modifiers.canFind(Modifier.additive)) {
+    if (blocks.canFind(curBlock.name)) 
+    {
+        if (!curBlock.modifiers.canFind(Modifier.redef) && !curBlock.modifiers.canFind(Modifier.additive)) 
+        {
             error(filename, lineNum, "Redefinition of {" ~ curBlock.name ~ "}, use ':=' to redefine");
         }
-    } else {
+    } 
+    else 
+    {
         blocks ~= curBlock.name;
     }
 
-    foreach (cmd; curSection.commands) {
-        if (cmd.name == "@code_type") {
+    foreach (cmd; curSection.commands) 
+    {
+        if (cmd.name == "@code_type") 
+        {
             curBlock.codeType = cmd.args;
-        } else if (cmd.name == "@comment_type") {
-            if (curBlock.name.endsWith(" noComment")) {
+        } 
+        else if (cmd.name == "@comment_type") 
+        {
+            if (curBlock.name.endsWith(" noComment")) 
+            {
                 curBlock.name = curBlock.name[0..$-10];
                 curBlock.commentString = "";
-            } else {
+            } 
+            else 
+            {
                 curBlock.commentString = cmd.args;
             }
         }
@@ -683,25 +737,36 @@ auto modMatch = matchFirst(curBlock.name, checkForModifiers);
 
 // matchFirst returns unmatched groups as empty strings
 
-if (modMatch["namea"] != "") {
+if (modMatch["namea"] != "") 
+{
     curBlock.name = modMatch["namea"];
-} else if (modMatch["nameb"] != ""){
+} 
+else if (modMatch["nameb"] != "")
+{
     curBlock.name = modMatch["nameb"];
     // Check for old syntax.
-    if (curBlock.name.endsWith("+=")) {
+    if (curBlock.name.endsWith("+=")) 
+    {
         curBlock.modifiers ~= Modifier.additive;
         curBlock.name = strip(curBlock.name[0..$-2]);
-    } else if (curBlock.name.endsWith(":=")) {
+    } 
+    else if (curBlock.name.endsWith(":=")) 
+    {
         curBlock.modifiers ~= Modifier.redef;
         curBlock.name = strip(curBlock.name[0..$-2]);
     }
-} else {
+} 
+else 
+{
     error(filename, lineNum, "Something went wrong with: " ~ curBlock.name);
 }
 
-if (modMatch["modifiers"]) {
-    foreach (m; splitter(modMatch["modifiers"], splitOnSpace)) {
-        switch(m) {
+if (modMatch["modifiers"]) 
+{
+    foreach (m; splitter(modMatch["modifiers"], splitOnSpace)) 
+    {
+        switch(m) 
+        {
             case "+=":
                 curBlock.modifiers ~= Modifier.additive;
                 break;
@@ -719,7 +784,6 @@ if (modMatch["modifiers"]) {
                 break;
         }
     }
-
 }
 ```
 
@@ -730,9 +794,7 @@ except the new block we create is a block of prose as opposed to code.
 
 #### Begin a new prose block
 ```d
-if (curBlock !is null) {
-    curSection.blocks ~= curBlock;
-}
+if (curBlock !is null) curSection.blocks ~= curBlock;
 curBlock = new Block();
 curBlock.startLine = lineObj;
 curBlock.isCodeblock = false;
@@ -759,14 +821,19 @@ be closed and added to the section first. If the last block is a code block, it 
 closed with three backticks. If it was not, we throw an error.
 
 ```d
-if (curBlock !is null) {
-    if (!curBlock.isCodeblock) {
+if (curBlock !is null) 
+{
+    if (!curBlock.isCodeblock) 
+    {
         curSection.blocks ~= curBlock;
-    } else {
+    } 
+    else 
+    {
         writeln(filename, ":", lines.length - 1, ":error: {", curBlock.name, "} is never closed");
     }
 }
-if (curSection !is null) {
+if (curSection !is null) 
+{
     chapter.sections ~= curSection;
 }
 ```
@@ -802,33 +869,43 @@ which kind of block we are in: replaceText or searchText.
 
 ```d
 // Start a change block
-if (startsWith(line, "@change") && !startsWith(line, "@change_end")) {
+if (startsWith(line, "@change") && !startsWith(line, "@change_end")) 
+{
     curChange = new Change();
     curChange.filename = strip(line[7..$]);
     continue;
-} else if (startsWith(line, "@replace")) {
+} 
+else if (startsWith(line, "@replace")) 
+{
     // Begin the search block
     curChange.searchText ~= "";
     curChange.replaceText ~= "";
     inReplaceBlock = false;
     inSearchBlock = true;
     continue;
-} else if (startsWith(line, "@with")) {
+} 
+else if (startsWith(line, "@with")) 
+{
     // Begin the replace block and end the search block
     inReplaceBlock = true;
     inSearchBlock = false;
     continue;
-} else if (startsWith(line, "@end")) {
+} 
+else if (startsWith(line, "@end")) 
+{
     // End the replace block
     inReplaceBlock = false;
     inSearchBlock = false;
     // Increment the number of changes
     curChange.index++;
     continue;
-} else if (startsWith(line, "@change_end")) {
+} 
+else if (startsWith(line, "@change_end")) 
+{
     // Apply all the changes
     string text = readall(File(curChange.filename));
-    foreach (i; 0 .. curChange.index) {
+    foreach (i; 0 .. curChange.index) 
+    {
         text = text.replace(curChange.searchText[i], curChange.replaceText[i]);
     }
     Chapter c = new Chapter();
@@ -846,10 +923,13 @@ if (startsWith(line, "@change") && !startsWith(line, "@change_end")) {
 }
 
 // Just add the line to the search or replace text depending
-else if (inSearchBlock) {
+else if (inSearchBlock) 
+{
     curChange.searchText[curChange.index] ~= line ~ "\n";
     continue;
-} else if (inReplaceBlock) {
+} 
+else if (inReplaceBlock) 
+{
     curChange.replaceText[curChange.index] ~= line ~ "\n";
     continue;
 }
@@ -866,11 +946,13 @@ or any other output formats by e.g. `pandoc`.
 ```d
 @{Weaver imports}
 
-void weave(Program p) {
+void weave(Program p) 
+{
     @{Parse use locations}
     @{Run weaveChapter}
-    if (isBook && !noOutput) {
-@{Create the table of contents}
+    if (isBook && !noOutput) 
+    {
+		@{Create the table of contents}
     }
 }
 
@@ -895,30 +977,46 @@ string[][string] redefLocations;
 string[][string] addLocations;
 string[][string] useLocations;
 
-foreach (chapter; p.chapters) {
-    foreach (s; chapter.sections) {
-        foreach (block; s.blocks) {
-            if (block.isCodeblock) {
-                if (block.modifiers.canFind(Modifier.noWeave)) {
+foreach (chapter; p.chapters) 
+{
+    foreach (s; chapter.sections) 
+    {
+        foreach (block; s.blocks) 
+        {
+            if (block.isCodeblock) 
+            {
+                if (block.modifiers.canFind(Modifier.noWeave)) 
+                {
                     defLocations[block.name] = "noWeave";
                     continue;
                 }
 
                 @{Check if it's a root block}
 
-                if (block.modifiers.canFind(Modifier.additive)) {
+                if (block.modifiers.canFind(Modifier.additive)) 
+                {
                     if (block.name !in addLocations || !addLocations[block.name].canFind(s.numToString()))
+                    {
                         addLocations[block.name] ~= chapter.num() ~ ":" ~ s.numToString();
-                } else if (block.modifiers.canFind(Modifier.redef)) {
+                    }
+                } 
+                else if (block.modifiers.canFind(Modifier.redef)) 
+                {
                     if (block.name !in redefLocations || !redefLocations[block.name].canFind(s.numToString()))
+                    {
                         redefLocations[block.name] ~= chapter.num() ~ ":" ~ s.numToString();
-                } else {
+                    }
+                } 
+                else 
+                {
                     defLocations[block.name] = chapter.num() ~ ":" ~ s.numToString();
                 }
 
-                foreach (lineObj; block.lines) {
+                foreach (lineObj; block.lines) 
+                {
                     string line = strip(lineObj.text);
-                    if (line.startsWith("@{") && line.endsWith("}")) {
+                    if (line.startsWith("@{") && line.endsWith("}")) 
+                    {
                         useLocations[line[2..$ - 1]] ~= chapter.num() ~ ":" ~ s.numToString();
                     }
                 }
@@ -933,16 +1031,17 @@ If `noOutput` is false, we generate Markdown files in the `outDir`.
 
 ## Run weaveChapter
 ```d
-foreach (c; p.chapters) {
+foreach (c; p.chapters) 
+{
     string output = weaveChapter(c, p, defLocations, redefLocations,
                                  addLocations, useLocations);
-    if (!noOutput) {
+    if (!noOutput) 
+    {
         string dir = outDir;
-        if (isBook) {
+        if (isBook) 
+        {
             dir = outDir ~ "/_book";
-            if (!dir.exists()) {
-                mkdir(dir);
-            }
+            if (!dir.exists()) mkdir(dir);
         }
         File f = File(dir ~ "/" ~ stripExtension(baseName(c.file)) ~ "- woven.md", "w");
         f.write(output);
@@ -965,7 +1064,8 @@ File f = File(dir ~ "/" ~ p.title ~ "_contents.md", "w");
 f.writeln("# " ~ p.title);
 f.writeln(p.text);
 
-foreach (c; p.chapters) {
+foreach (c; p.chapters) 
+{
     f.writeln(c.num() ~ "[" ~ stripExtension(baseName(c.file)) ~ "]" ~ c.title);
 }
 
@@ -985,11 +1085,10 @@ we're done.
 ```d
 auto fileMatch = matchAll(block.name, regex(".*\\.\\w+"));
 auto quoteMatch = matchAll(block.name, regex("^\".*\"$"));
-if (fileMatch || quoteMatch) {
+if (fileMatch || quoteMatch) 
+{
     block.isRootBlock = true;
-    if (quoteMatch) {
-        block.name = block.name[1..$-1];
-    }
+    if (quoteMatch) block.name = block.name[1..$-1];  
 }
 ```
 
@@ -1000,8 +1099,8 @@ This function weaves a single chapter.
 ```d
 string weaveChapter(Chapter c, Program p, string[string] defLocations,
                     string[][string] redefLocations, string[][string] addLocations,
-                    string[][string] useLocations) {
-
+                    string[][string] useLocations) 
+{
     string output = "";
     @{Write the body}
     return output;
@@ -1023,14 +1122,20 @@ between the title and the prose.
 
 ## Write the body
 ```d
-foreach (s; c.sections) {
+foreach (s; c.sections) 
+{
     output ~= c.num() ~ ":" ~ s.numToString() ~ s.numToString() ~ ". " ~ s.title ~ "\n";
 
-    foreach (block; s.blocks) {
-        if (!block.modifiers.canFind(Modifier.noWeave)) {
-            if (!block.isCodeblock) {
+    foreach (block; s.blocks) 
+    {
+        if (!block.modifiers.canFind(Modifier.noWeave)) 
+        {
+            if (!block.isCodeblock) 
+            {
                 @{Weave a prose block}
-            } else {
+            } 
+            else 
+            {
                 @{Weave a code block}
             }
         }
@@ -1046,25 +1151,29 @@ Weaving a prose block is not very complicated.
 ```d
 string md = "";
 
-foreach (lineObj; block.lines) {
+foreach (lineObj; block.lines) 
+{
     auto l = lineObj.text;
-    if (l.matchAll(regex(r"@\{.*?\}"))) {
+    if (l.matchAll(regex(r"@\{.*?\}"))) 
+    {
         auto matches = l.matchAll(regex(r"@\{(.*?)\}"));
-        foreach (m; matches) {
+        foreach (m; matches) 
+        {
             auto def = "";
             auto defLocation = "";
             auto str = strip(m[1]);
-            if (str !in defLocations) {
+            if (str !in defLocations) 
+            {
                 error(lineObj.file, lineObj.lineNum, "{" ~ str ~ "} is never defined");
-            } else if (defLocations[str] != "noWeave") {
+            } 
+            else if (defLocations[str] != "noWeave") 
+            {
                 def = defLocations[str];
                 defLocation = def;
                 auto index = def.indexOf(":");
                 string chapter = def[0..index];
                 auto mdFile = getChapterMdFile(p.chapters, chapter);
-                if (chapter == c.num()) {
-                    defLocation = def[index + 1..$];
-                }
+                if (chapter == c.num()) defLocation = def[index + 1..$];       
                 l = l.replaceAll(regex(r"@\{" ~ str ~ r"\}"), "`{" ~ str ~ ",`[`" ~ defLocation ~ "`](" ~ mdFile ~ "#" ~ def ~ ")`}`");
             }
         }
@@ -1121,15 +1230,19 @@ string chapterNum;
 string def;
 string defLocation;
 string htmlFile = "";
-if (block.name !in defLocations) {
+if (block.name !in defLocations) 
+{
     error(block.startLine.file, block.startLine.lineNum, "{" ~ block.name ~ "} is never defined");
-} else {
+} 
+else 
+{
     def = defLocations[block.name];
     defLocation = def;
     auto index = def.indexOf(":");
     string chapter = def[0..index];
     htmlFile = getChapterHtmlFile(p.chapters, chapter);
-    if (chapter == c.num()) {
+    if (chapter == c.num()) 
+    {
         defLocation = def[index + 1..$];
     }
 }
@@ -1141,9 +1254,12 @@ it goes outside the `{}` and is not really part of the name anymore.
 #### Find the definition location +=
 ```d
 string extra = "";
-if (block.modifiers.canFind(Modifier.additive)) {
+if (block.modifiers.canFind(Modifier.additive)) 
+{
     extra = " +=";
-} else if (block.modifiers.canFind(Modifier.redef)) {
+} 
+else if (block.modifiers.canFind(Modifier.redef)) 
+{
     extra = " :=";
 }
 ```
@@ -1153,11 +1269,9 @@ We simple put the title in in a strong tag if it is a root codeblock to make it 
 #### Make the title bold if necessary
 ```d
 string name;
-if (block.isRootBlock) {
-    name = "<strong>" ~ block.name ~ "</strong>";
-} else {
-    name = block.name;
-}
+if (block.isRootBlock) name = "<strong>" ~ block.name ~ "</strong>";
+else name = block.name;
+
 ```
 
 ### The actual code
@@ -1168,17 +1282,24 @@ on its own -- and it's pretty good at that.
 
 #### Write the actual code
 ```d
-if (block.codeType.split().length > 1) {
-    if (block.codeType.split()[1].indexOf(".") == -1) {
+if (block.codeType.split().length > 1) 
+{
+    if (block.codeType.split()[1].indexOf(".") == -1) 
+    {
         warn(block.startLine.file, 1, "@code_type extension must begin with a '.', for example: `@code_type c .c`");
-    } else {
+    } 
+    else 
+    {
         output ~= "<pre class=\"prettyprint lang-" ~ block.codeType.split()[1][1..$] ~ "\">\n";
     }
-} else {
+} 
+else 
+{
     output ~= "<pre class=\"prettyprint\">\n";
 }
 
-foreach (lineObj; block.lines) {
+foreach (lineObj; block.lines) 
+{
     @{Write the line}
 }
 output ~= "</pre>\n";
@@ -1193,9 +1314,12 @@ Also we escape all ampersands and greater than and less than signs before writin
 ```d
 string line = lineObj.text;
 string strippedLine = strip(line);
-if (strippedLine.startsWith("@{") && strippedLine.endsWith("}")) {
+if (strippedLine.startsWith("@{") && strippedLine.endsWith("}")) 
+{
     @{Link a used codeblock}
-} else {
+} 
+else 
+{
     output ~= line.replace("&", "&amp;").replace(">", "&gt;").replace("<", "&lt;") ~ "\n";
 }
 ```
@@ -1209,15 +1333,19 @@ pretty printer.
 ```d
 def = "";
 defLocation = "";
-if (strip(strippedLine[2..$ - 1]) !in defLocations) {
+if (strip(strippedLine[2..$ - 1]) !in defLocations) 
+{
     error(lineObj.file, lineObj.lineNum, "{" ~ strip(strippedLine[2..$ - 1]) ~ "} is never defined");
-} else if (defLocations[strip(strippedLine[2..$ - 1])] != "noWeave") {
+} 
+else if (defLocations[strip(strippedLine[2..$ - 1])] != "noWeave") 
+{
     def = defLocations[strippedLine[2..$ - 1]];
     defLocation = def;
     auto index = def.indexOf(":");
     string chapter = def[0..index];
     htmlFile = getChapterHtmlFile(p.chapters, chapter);
-    if (chapter == c.num()) {
+    if (chapter == c.num()) 
+    {
         defLocation = def[index + 1..$];
     }
     def = ", <a href=\"" ~ htmlFile ~ "#" ~ def ~ "\">" ~ defLocation ~ "</a>";
@@ -1235,49 +1363,48 @@ and whether to have plurals and whatnot.
 
 #### LinkLocations function
 ```d
-T[] noDupes(T)(in T[] s) {
+T[] noDupes(T)(in T[] s) 
+{
     import std.algorithm: canFind;
     T[] result;
     foreach (T c; s)
-        if (!result.canFind(c))
-            result ~= c;
+    {
+        if (!result.canFind(c)) result ~= c;
+    }
     return result;
 }
 
-string linkLocations(string text, string[][string] sectionLocations, Program p, Chapter c, Section s, parser.Block block) {
-    if (block.name in sectionLocations) {
+string linkLocations(string text, string[][string] sectionLocations, Program p, Chapter c, Section s, parser.Block block) 
+{
+    if (block.name in sectionLocations) 
+    {
         string[] locations = dup(sectionLocations[block.name]).noDupes;
 
-        if (locations.canFind(c.num() ~ ":" ~ s.numToString())) {
+        if (locations.canFind(c.num() ~ ":" ~ s.numToString())) 
+        {
             locations = remove(locations, locations.countUntil(c.num() ~ ":" ~ s.numToString()));
         }
 
-        if (locations.length > 0) {
+        if (locations.length > 0) 
+        {
             string seealso = "<p class=\"seealso\">" ~ text;
 
-            if (locations.length > 1) {
-                seealso ~= "s ";
-            } else {
-                seealso ~= " ";
-            }
-
-            foreach (i; 0 .. locations.length) {
+            if (locations.length > 1) seealso ~= "s ";
+            else seealso ~= " ";
+            
+            foreach (i; 0 .. locations.length) 
+            {
                 string loc = locations[i];
                 string locName = loc;
                 auto index = loc.indexOf(":");
                 string chapter = loc[0..index];
                 string htmlFile = getChapterHtmlFile(p.chapters, chapter);
-                if (chapter == c.num()) {
-                    locName = loc[index + 1..$];
-                }
+                if (chapter == c.num()) locName = loc[index + 1..$];
                 loc = "<a href=\"" ~ htmlFile ~ "#" ~ loc ~ "\">" ~ locName ~ "</a>";
-                if (i == 0) {
-                    seealso ~= loc;
-                } else if (i == locations.length - 1) {
-                    seealso ~= " and " ~ loc;
-                } else {
-                    seealso ~= ", " ~ loc;
-                }
+                if (i == 0) seealso ~= loc;
+                else if (i == locations.length - 1) seealso ~= " and " ~ loc;
+                else seealso ~= ", " ~ loc;
+                
             }
             seealso ~= "</p>";
             return seealso;
@@ -1352,7 +1479,8 @@ import parser;
 import util;
 import std.conv: to;
 
-void tangle(Program p) {
+void tangle(Program p) 
+{
     @{The tangle function}
 }
 
@@ -1385,7 +1513,8 @@ Now we check if there are any root codeblocks.
 
 ## The tangle function +=
 ```d
-if (rootCodeblocks.length == 0) {
+if (rootCodeblocks.length == 0) 
+{
     warn(p.file, 1, "No file codeblocks, not writing any code");
 }
 ```
@@ -1397,15 +1526,13 @@ the code.
 
 ## The tangle function +=
 ```d
-foreach (b; rootCodeblocks) {
+foreach (b; rootCodeblocks) 
+{
     string filename = b.name;
     File f;
-    if (!noOutput)
-        f = File(outDir ~ "/" ~ filename, "w");
-
+    if (!noOutput) f = File(outDir ~ "/" ~ filename, "w");
     writeCode(codeblocks, b.name, f, filename, "");
-    if (!noOutput)
-        f.close();
+    if (!noOutput) f.close();
 }
 ```
 
@@ -1416,38 +1543,55 @@ all the code for a codeblock. It also keeps the leading whitespace to make sure
 indentation in the target file is correct.
 
 ```d
-void writeCode(Block[string] codeblocks, string blockName, File file, string filename, string whitespace) {
+void writeCode(Block[string] codeblocks, string blockName, File file, string filename, string whitespace) 
+{
     Block block = codeblocks[blockName];
 
-    if (block.commentString != "") {
+    if (block.commentString != "") 
+    {
         if (!noOutput)
+        {
             file.writeln(whitespace ~ block.commentString.replace("%s", blockName));
+        }
     }
 
-    foreach (lineObj; block.lines) {
+    foreach (lineObj; block.lines) 
+    {
         string line = lineObj.text;
         string stripLine = strip(line);
-        if (stripLine.startsWith("@{") && stripLine.endsWith("}")) {
+        if (stripLine.startsWith("@{") && stripLine.endsWith("}")) 
+        {
             string newWS = leadingWS(line);
             auto index = stripLine.length - 1;
             auto newBlockName = stripLine[2..index];
-            if (newBlockName == blockName) {
+            if (newBlockName == blockName) 
+            {
                 error(lineObj.file, lineObj.lineNum, "{" ~ blockName ~ "} refers to itself");
                 tangleErrors = true;
                 return;
             }
-            if ((newBlockName in codeblocks) !is null) {
+            if ((newBlockName in codeblocks) !is null) 
+            {
                 writeCode(codeblocks, newBlockName, file, filename, whitespace ~ newWS);
-            } else {
+            } 
+            else 
+            {
                 error(lineObj.file, lineObj.lineNum, "{" ~ newBlockName ~ "} does not exist");
                 tangleErrors = true;
             }
-        } else {
-            if (!noOutput) {
-                if (lineDirectives) {
-                    if (lineDirectiveStr != "") {
+        } 
+        else 
+        {
+            if (!noOutput) 
+            {
+                if (lineDirectives) 
+                {
+                    if (lineDirectiveStr != "") 
+                    {
                         file.writeln(lineDirectiveStr, " ", lineObj.lineNum);
-                    } else {
+                    } 
+                    else 
+                    {
                         file.writeln(block.commentString.replace("%s", to!string(lineObj.lineNum)));
                     }
                 }
@@ -1455,8 +1599,7 @@ void writeCode(Block[string] codeblocks, string blockName, File file, string fil
             }
         }
     }
-    if (!noOutput)
-        file.writeln();
+    if (!noOutput) file.writeln();
 }
 ```
 
@@ -1476,7 +1619,8 @@ Here is an overview:
 @{getLinenums function}
 @{lit function}
 
-void main(in string[] args) {
+void main(in string[] args) 
+{
     string[] files = [];
     @{Parse the arguments}
     @{Run Literate}
@@ -1546,7 +1690,8 @@ Each modifier is represented by this list of enums:
 ## Modifiers
 
 ```d
-enum Modifier {
+enum Modifier 
+{
     noWeave,
     noTangle, // Not yet implemented
     noComment,
@@ -1568,47 +1713,71 @@ Now, to actually parse the arguments:
 ## Parse the arguments
 
 ```d
-for (int i = 1; i < args.length; i++) {
+for (int i = 1; i < args.length; i++) 
+{
     auto arg = args[i];
-    if (arg == "--help" || arg == "-h") {
+    if (arg == "--help" || arg == "-h") 
+    {
         writeln(helpText);
         return;
-    } else if (arg == "--tangle" || arg == "-t") {
+    } 
+    else if (arg == "--tangle" || arg == "-t") 
+    {
         tangleOnly = true;
-    } else if (arg == "--weave" || arg == "-w") {
+    } 
+    else if (arg == "--weave" || arg == "-w") 
+    {
         weaveOnly = true;
-    } else if (arg == "--no-output" || arg == "-no") {
+    }
+    else if (arg == "--no-output" || arg == "-no") 
+    {
         noOutput = true;
-    } else if (arg == "--out-dir" || arg == "-odir") {
-        if (i == args.length - 1) {
+    }
+    else if (arg == "--out-dir" || arg == "-odir") {
+        if (i == args.length - 1) 
+        {
             writeln("No output directory provided.");
             return;
         }
         outDir = args[++i];
-    } else if (arg == "--compiler" || arg == "-c") {
+    } 
+    else if (arg == "--compiler" || arg == "-c") 
+    {
         noCompCmd = false;
         noOutput = true;
-    } else if (arg == "--linenums" || arg == "-l") {
+    } 
+    else if (arg == "--linenums" || arg == "-l") 
+    {
         lineDirectives = true;
-        if (i == args.length - 1) {
+        if (i == args.length - 1) 
+        {
             writeln("No line number string provided.");
             return;
         }
         lineDirectiveStr = args[++i];
-    } else if (arg == "--md-compiler") {
+    } 
+    else if (arg == "--md-compiler") 
+    {
         useMdCompiler = true;
-        if (i == args.length - 1) {
+        if (i == args.length - 1) 
+        {
             writeln("No markdown compiler provided.");
             return;
         }
         mdCompilerCmd = args[++i];
-    } else if (arg == "--version" || arg == "-v") {
+    } 
+    else if (arg == "--version" || arg == "-v") 
+    {
         writeln("Literate version " ~ versionNum);
         writeln("Compiled by " ~ __VENDOR__ ~ " on " ~ __DATE__);
         return;
-    } else if (arg == "-") {
+    } 
+    else if (arg == "-") 
+    {
         useStdin = true;
-    } else {
+    } 
+    else 
+    {
         files ~= arg;
     }
 }
@@ -1620,9 +1789,12 @@ To run literate we go through every file that was passed in, check if it exists,
 and run tangle and weave on it (unless `tangleOnly` or `weaveOnly` was specified).
 
 ```d
-if (files.length > 0) {
-    foreach (filename; files) {
-        if (!filename.exists()) {
+if (files.length > 0) 
+{
+    foreach (filename; files) 
+    {
+        if (!filename.exists()) 
+        {
             writeln("File ", filename, " does not exist!");
             continue;
         }
@@ -1631,10 +1803,14 @@ if (files.length > 0) {
 
         lit(filename, fileSrc);
     }
-} else if (useStdin) {
+} 
+else if (useStdin) 
+{
     string stdinSrc = readall();
     lit("stdin", stdinSrc);
-} else  {
+} 
+else  
+{
     writeln(helpText);
 }
 ```
@@ -1645,17 +1821,22 @@ was passed.
 
 ## lit function
 ```d
-void lit(string filename, string fileSrc) {
+void lit(string filename, string fileSrc) 
+{
     Program p = new Program();
     p.file = filename;
-    if (fileSrc.matchFirst("(\n|^)@book\\s*?(\n|$)")) {
+    if (fileSrc.matchFirst("(\n|^)@book\\s*?(\n|$)")) 
+    {
         isBook = true;
         p = parseProgram(p, fileSrc);
-        if (p.chapters.length == 0) {
+        if (p.chapters.length == 0) 
+        {
             error(filename, 1, "This book has no chapters");
             return;
         }
-    } else {
+    } 
+    else 
+    {
         Chapter c = new Chapter();
         c.file = filename;
         c.majorNum = 1; c.minorNum = 0;
@@ -1664,15 +1845,11 @@ void lit(string filename, string fileSrc) {
         p.chapters ~= c;
     }
 
-    if (!weaveOnly) {
-        tangle(p);
-    }
-
-    if (!tangleOnly) {
-        weave(p);
-    }
-
-    if (!noCompCmd && !tangleErrors && !weaveOnly) {
+    if (!weaveOnly) tangle(p);
+    if (!tangleOnly) weave(p);
+    
+    if (!noCompCmd && !tangleErrors && !weaveOnly) 
+    {
         @{Check for compiler errors}
     }
 }
@@ -1693,7 +1870,8 @@ Block[string] rootCodeblocks;
 Block[string] codeblocks;
 getCodeblocks(p, codeblocks, rootCodeblocks);
 
-foreach (b; rootCodeblocks) {
+foreach (b; rootCodeblocks) 
+{
     codeLinenums = getLinenums(codeblocks, b.name, b.name, codeLinenums);
 }
 ```
@@ -1705,20 +1883,29 @@ Now we go and check for the `@compiler` command and the `@error_format` command.
 string compilerCmd;
 string errorFormat;
 Command errorFormatCmd;
-foreach (cmd; p.commands) {
-    if (cmd.name == "@compiler") {
+foreach (cmd; p.commands) 
+{
+    if (cmd.name == "@compiler") 
+    {
         compilerCmd = cmd.args;
-    } else if (cmd.name == "@error_format") {
+    } 
+    else if (cmd.name == "@error_format") 
+    {
         errorFormat = cmd.args;
         errorFormatCmd = cmd;
     }
 }
-if (p.chapters.length == 1) {
+if (p.chapters.length == 1) 
+{
     Chapter c = p.chapters[0];
-    foreach (cmd; c.commands) {
-        if (cmd.name == "@compiler") {
+    foreach (cmd; c.commands) 
+    {
+        if (cmd.name == "@compiler") 
+        {
             compilerCmd = cmd.args;
-        } else if (cmd.name == "@error_format") {
+        } 
+        else if (cmd.name == "@error_format") 
+        {
             errorFormat = cmd.args;
             errorFormatCmd = cmd;
         }
@@ -1741,7 +1928,8 @@ Supported compilers/linters are:
 
 ## Check for compiler errors +=
 ```d
-if (errorFormat is null) {
+if (errorFormat is null) 
+{
     if (compilerCmd.indexOf("clang") != -1) { errorFormat = "%f:%l:%s: %s: %m"; }
     else if (compilerCmd.indexOf("gcc") != -1) { errorFormat = "%f:%l:%s: %s: %m"; }
     else if (compilerCmd.indexOf("g++") != -1) { errorFormat = "%f:%l:%s: %s: %m"; }
@@ -1759,15 +1947,20 @@ given by the array `codeLinenums` that we created earlier.
 
 ## Check for compiler errors +=
 ```d
-if (errorFormat !is null) {
-    if (errorFormat.indexOf("%l") != -1 && errorFormat.indexOf("%f") != -1 && errorFormat.indexOf("%m") != -1) {
+if (errorFormat !is null) 
+{
+    if (errorFormat.indexOf("%l") != -1 && errorFormat.indexOf("%f") != -1 && errorFormat.indexOf("%m") != -1) 
+    {
         auto r = regex("");
-        try {
+        try 
+        {
             r = regex("^" ~ errorFormat.replaceAll(regex("%s"), ".*?")
                                                    .replaceAll(regex("%l"), "(?P<linenum>\\d+?)")
                                                    .replaceAll(regex("%f"), "(?P<filename>.*?)")
                                                    .replaceAll(regex("%m"), "(?P<message>.*?)") ~ "$");
-        } catch (Exception e) {
+        } 
+        catch (Exception e) 
+        {
             error(errorFormatCmd.filename, errorFormatCmd.lineNum, "Regular expression error: " ~ e.msg);
             return;
         }
@@ -1776,25 +1969,30 @@ if (errorFormat !is null) {
         auto output = executeShell(compilerCmd).output.split("\n");
         int i = 0;
 
-        foreach (line; output) {
+        foreach (line; output) 
+        {
             auto matches = matchFirst(line, r);
 
             string linenum = matches["linenum"];
             string fname = matches["filename"];
             string message = matches["message"];
 
-            if (linenum != "" && fname != "") {
-                if (codeLinenums[fname].length > to!int(linenum)) {
+            if (linenum != "" && fname != "") 
+            {
+                if (codeLinenums[fname].length > to!int(linenum)) 
+                {
                     auto codeline = codeLinenums[fname][to!int(linenum) - 1];
                     error(codeline.file, codeline.lineNum, message);
-                } else {
+                } 
+                else 
+                {
                     auto codeline = codeLinenums[fname][codeLinenums[fname].length - 2];
                     error(codeline.file, codeline.lineNum, message);
                 }
-            } else {
-                if (!(line == "" && i == output.length - 1)) {
-                    writeln(line);
-                }
+            } 
+            else 
+            {
+                if (!(line == "" && i == output.length - 1)) writeln(line);
             }
             i++;
         }
@@ -1810,21 +2008,27 @@ line number for that line.
 
 ```d
 Line[][string] getLinenums(Block[string] codeblocks, string blockName,
-                 string rootName, Line[][string] codeLinenums) {
+                 string rootName, Line[][string] codeLinenums) 
+{
     Block block = codeblocks[blockName];
 
-    if (block.commentString != "") {
+    if (block.commentString != "") 
+    {
         codeLinenums[rootName] ~= new Line("comment", "", 0);
     }
 
-    foreach (lineObj; block.lines) {
+    foreach (lineObj; block.lines) 
+    {
         string line = lineObj.text;
         string stripLine = strip(line);
-        if (stripLine.startsWith("@{") && stripLine.endsWith("}")) {
+        if (stripLine.startsWith("@{") && stripLine.endsWith("}")) 
+        {
             auto index = stripLine.length - 1;
             auto newBlockName = stripLine[2..index];
             getLinenums(codeblocks, newBlockName, rootName, codeLinenums);
-        } else {
+        } 
+        else 
+        {
             codeLinenums[rootName] ~= lineObj;
         }
     }
@@ -1884,22 +2088,20 @@ reads from stdin until `control-d` is pressed, and returns the string.
 
 ```d
 // Read from a file
-string readall(File file) {
+string readall(File file) 
+{
     string src = "";
-    while (!file.eof) {
-        src ~= file.readln();
-    }
+    while (!file.eof) src ~= file.readln(); 
     file.close();
     return src;
 }
 
 // Read from stdin
-string readall() {
+string readall() 
+{
     string src = "";
     string line;
-    while ((line = readln()) !is null) {
-        src ~= line;
-    }
+    while ((line = readln()) !is null) src ~= line; 
     return src;
 }
 ```
@@ -1910,14 +2112,16 @@ These functions simply write errors or warnings to stdout.
 
 ### error function
 ```d
-void error(string file, int line, string message) {
+void error(string file, int line, string message) 
+{
     writeln(file, ":", line, ":error: ", message);
 }
 ```
 
 ### warning function
 ```d
-void warn(string file, int line, string message) {
+void warn(string file, int line, string message) 
+{
     writeln(file, ":", line, ":warning: ", message);
 }
 ```
@@ -1927,7 +2131,8 @@ void warn(string file, int line, string message) {
 This function returns the leading whitespace of the input string.
 
 ```d
-string leadingWS(string str) {
+string leadingWS(string str) 
+{
     auto firstChar = str.indexOf(strip(str)[0]);
     return str[0..firstChar];
 }
@@ -1948,29 +2153,37 @@ it to the `rootCodeblocks` array.
 ```d
 void getCodeblocks(Program p, 
                    out Block[string] codeblocks,
-                   out Block[string] rootCodeblocks) {
+                   out Block[string] rootCodeblocks) 
+{
     Block[] tempCodeblocks;
 
-    foreach (c; p.chapters) {
-        foreach (s; c.sections) {
-            foreach (b; s.blocks) {
+    foreach (c; p.chapters) 
+    {
+        foreach (s; c.sections) 
+        {
+            foreach (b; s.blocks) 
+            {
                 bool isRootBlock = false;
-                if (b.isCodeblock) {
+                if (b.isCodeblock) 
+                {
                     Block copy = b.dup();
                     auto fileMatch = matchAll(copy.name, regex(".*\\.\\w+"));
                     auto quoteMatch = matchAll(copy.name, regex("^\".*\"$"));
-                    if (fileMatch || quoteMatch) {
+                    if (fileMatch || quoteMatch) 
+                    {
                         copy.isRootBlock = true;
-                        if (quoteMatch) {
-                            copy.name = copy.name[1..$-1];
-                        }
+                        if (quoteMatch) copy.name = copy.name[1..$-1];   
                     }
-                    if ((!copy.modifiers.canFind(Modifier.additive)) && (!copy.modifiers.canFind(Modifier.redef))) {
+                    if ((!copy.modifiers.canFind(Modifier.additive)) && (!copy.modifiers.canFind(Modifier.redef))) 
+                    {
                         codeblocks[copy.name] = copy;
-                        if (copy.isRootBlock) {
+                        if (copy.isRootBlock) 
+                        {
                             rootCodeblocks[copy.name] = copy;
                         }
-                    } else {
+                    } 
+                    else 
+                    {
                         tempCodeblocks ~= copy;
                     }
                 }
@@ -1979,21 +2192,31 @@ void getCodeblocks(Program p,
     }
 
     // Now we go through every codeblock in tempCodeblocks and apply the += and :=
-    foreach (b; tempCodeblocks) {
-        if (b.modifiers.canFind(Modifier.additive)) {
+    foreach (b; tempCodeblocks) 
+    {
+        if (b.modifiers.canFind(Modifier.additive)) 
+        {
             auto index = b.name.length;
             string name = strip(b.name[0..index]);
-            if ((name in codeblocks) is null) {
+            if ((name in codeblocks) is null) 
+            {
                 error(p.file, b.startLine.lineNum, "Trying to add to {" ~ name ~ "} which does not exist");
-            } else {
+            } 
+            else 
+            {
                 codeblocks[name].lines ~= b.lines;
             }
-        } else if (b.modifiers.canFind(Modifier.redef)) {
+        } 
+        else if (b.modifiers.canFind(Modifier.redef)) 
+        {
             auto index = b.name.length;
             string name = strip(b.name[0..index]);
-            if ((name in codeblocks) is null) {
+            if ((name in codeblocks) is null) 
+            {
                 error(p.file, b.startLine.lineNum, "Trying to redefine {" ~ name ~ "} which does not exist");
-            } else {
+            } 
+            else 
+            {
                 codeblocks[name].lines = b.lines;
             }
         }
@@ -2008,15 +2231,19 @@ numbers for it. The minor and major nums are passed in as a string formatted as:
 `major.minor`.
 
 ```d
-string getChapterHtmlFile(Chapter[] chapters, string num) {
+string getChapterHtmlFile(Chapter[] chapters, string num) 
+{
     string[] nums = num.split(".");
     int majorNum = to!int(nums[0]);
     int minorNum = 0;
-    if (nums.length > 1) {
+    if (nums.length > 1) 
+    {
         minorNum = to!int(nums[1]);
     }
-    foreach (Chapter c; chapters) {
-        if (c.majorNum == majorNum && c.minorNum == minorNum) {
+    foreach (Chapter c; chapters) 
+    {
+        if (c.majorNum == majorNum && c.minorNum == minorNum) 
+        {
             return stripExtension(baseName(c.file)) ~ ".html";
         }
     }

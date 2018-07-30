@@ -31,7 +31,8 @@ string helpText =
 "--version    -v         Show the version number and compiler information";
 
 // Modifiers
-enum Modifier {
+enum Modifier 
+{
     noWeave,
     noTangle, // Not yet implemented
     noComment,
