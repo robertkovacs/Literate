@@ -12,33 +12,71 @@ import std.file;
 import std.array;
 
 // Classes
-// Line class
-class Line 
+// Program class
+class Program 
 {
+    public string title;
+    public Command[] commands;
+    public Chapter[] chapters;
     public string file;
-    public int lineNum;
     public string text;
 
-    this(string text, string file, int lineNum) 
+    this() 
     {
-        this.text = text;
-        this.file = file;
-        this.lineNum = lineNum;
-    }
-
-    Line dup() 
-    {
-        return new Line(text, file, lineNum);
+        commands = [];
+        chapters = [];
     }
 }
 
-// Command class
-class Command 
+// Chapter class
+class Chapter 
 {
-    public string name;
-    public string args;
-    public int lineNum;
-    public string filename;
+    public string title;
+    public Command[] commands;
+    public Section[] sections;
+    public string file;
+
+    public int majorNum;
+    public int minorNum;
+
+    this() 
+    {
+        commands = [];
+        sections = [];
+    }
+
+    string num() 
+    {
+        if (minorNum != 0) return to!string(majorNum) ~ "." ~ to!string(minorNum);        
+        else return to!string(majorNum);  
+    }
+}
+
+// Section class
+class Section 
+{
+    public string title;
+    public Command[] commands;
+    public Block[] blocks;
+    public int[6] num;
+    public int level;
+
+    this() 
+    {
+        commands = [];
+        blocks = [];
+    }
+
+    string numToString() 
+    {
+        string numString;
+        for(int i = 5; i >= 0; i--) 
+        {
+            if (numString == "" && num[i] == 0) continue;
+            numString = to!string(num[i]) ~ (numString == "" ? "" : ".") ~ numString;
+        }
+        return numString;
+    }
 }
 
 // Block class
@@ -84,70 +122,32 @@ class Block
     }
 }
 
-// Section class
-class Section 
+// Command class
+class Command 
 {
-    public string title;
-    public Command[] commands;
-    public Block[] blocks;
-    public int[6] num;
-    public int level;
-
-    this() 
-    {
-        commands = [];
-        blocks = [];
-    }
-
-    string numToString() 
-    {
-        string numString;
-        for(int i = 5; i >= 0; i--) 
-        {
-            if (numString == "" && num[i] == 0) continue;
-            numString = to!string(num[i]) ~ (numString == "" ? "" : ".") ~ numString;
-        }
-        return numString;
-    }
+    public string name;
+    public string args;
+    public int lineNum;
+    public string filename;
 }
 
-// Chapter class
-class Chapter 
+// Line class
+class Line 
 {
-    public string title;
-    public Command[] commands;
-    public Section[] sections;
     public string file;
-
-    public int majorNum;
-    public int minorNum;
-
-    this() 
-    {
-        commands = [];
-        sections = [];
-    }
-
-    string num() 
-    {
-        if (minorNum != 0) return to!string(majorNum) ~ "." ~ to!string(minorNum);        
-        else return to!string(majorNum);  
-    }
-}
-
-// Program class
-class Program 
-{
-    public string title;
-    public Command[] commands;
-    public Chapter[] chapters;
-    public string file;
+    public int lineNum;
     public string text;
 
-    this() 
+    this(string text, string file, int lineNum) 
     {
-        commands = [];
-        chapters = [];
+        this.text = text;
+        this.file = file;
+        this.lineNum = lineNum;
+    }
+
+    Line dup() 
+    {
+        return new Line(text, file, lineNum);
     }
 }
 
