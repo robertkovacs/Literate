@@ -1,39 +1,20 @@
-release: lit/markdown/source d-files
-	@mkdir -p bin
-	dub build --build=release
-	@rm bin/tangle
+Literate.html: Literate.md
+	bin/lit Literate.md
 
-debug: lit/markdown/source d-files
-	@mkdir -p bin
-	dub build
+fullbuild: Literate.html $(sources)
+	dmd $(sources) -od=obj -of=bin/lit 
+	bin/lit Literate.md
 
-bin/tangle:
-	dub --root=lit/tangle build
+build: $(sources)
+	dmd $(sources) -od=obj -of=bin/lit
 
-d-files: bin/tangle
-	@mkdir -p source
-	bin/tangle -odir source lit/*.lit
-
-test: lit
-	dub test
-
-lit/markdown/source:
-	@if [ ! -s lit/markdown/source ]; then \
-		if [ ! -s .git ]; then \
-			git clone https://github.com/zyedidia/dmarkdown lit/markdown; \
-		else \
-			git submodule init; \
-			git submodule update; \
-		fi \
-	fi;
-
-clean:
-	dub clean
-	dub clean --root=lit/markdown
-	dub clean --root=lit/tangle
-
-clean-all:
-	dub clean
-	dub clean --root=lit/markdown
-	dub clean --root=lit/tangle
-	rm -rf bin source
+sources = src/globals.d \
+		  src/main.d \
+		  src/parser.d \
+		  src/tangler.d \
+		  src/util.d \
+		  src/weaver.d \
+		  src/dmarkdown/html.d \
+		  src/dmarkdown/markdown.d \
+		  src/dmarkdown/package.d \
+		  src/dmarkdown/string.d
