@@ -1411,7 +1411,7 @@ Finally we add this html to the output and add a newline for good measure.
 
 ### Weave a prose block +=
 ```d
-output ~= md ~ "\n";
+output ~= html ~ "\n";
 ```
 
 ## Weave a code block
