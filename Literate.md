@@ -1411,7 +1411,7 @@ Finally we add this html to the output and add a newline for good measure.
 
 ### Weave a prose block +=
 ```d
-output ~= md ~ "\n";
+output ~= html ~ "\n";
 ```
 
 ## Weave a code block
@@ -3194,6 +3194,7 @@ if (errorFormat !is null)
         {
             auto matches = matchFirst(line, r);
 
+            if( !matches.empty) {
             string linenum = matches["linenum"];
             string fname = matches["filename"];
             string message = matches["message"];
@@ -3216,6 +3217,7 @@ if (errorFormat !is null)
                 if (!(line == "" && i == output.length - 1)) writeln(line);
             }
             i++;
+            }
         }
     }
 }
