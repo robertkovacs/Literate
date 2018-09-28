@@ -1302,7 +1302,7 @@ foreach (s; c.sections)
                     html = filterMarkdown(md, MarkdownFlags.disableUnderscoreEmphasis);
                 }
                 
-                output ~= md ~ "\n";
+                output ~= html ~ "\n";
 
             } 
             else 

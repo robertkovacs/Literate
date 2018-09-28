@@ -152,6 +152,7 @@ void lit(string filename, string fileSrc)
                 {
                     auto matches = matchFirst(line, r);
         
+                    if( !matches.empty) {
                     string linenum = matches["linenum"];
                     string fname = matches["filename"];
                     string message = matches["message"];
@@ -174,6 +175,7 @@ void lit(string filename, string fileSrc)
                         if (!(line == "" && i == output.length - 1)) writeln(line);
                     }
                     i++;
+                    }
                 }
             }
         }
