@@ -2,6 +2,7 @@
 @comment_type // %s
 @compiler make debug -C ..
 @error_format .*/%f\(%l,%s\):%s: %m
+@add_css /Users/robert/Literate custom.css
 
 @title Literate
 
@@ -18,8 +19,25 @@ programmer likes, and the code should be explained.
 
 The source code for a literate program will somewhat resemble
 CWEB, but differ in many key ways which simplifies the source code
-and make it easier to read. Literate will use @ signs for commands
+and make it easier to read. Literate uses @ signs for commands
 and markdown to style the prose.
+
+Here is the full list of features (this is from 
+the [original manual](http://literate.zbyedidia.webfactional.com)):
+
+- supports any language including syntax highlighting and pretty printing
+  in HTML;
+- generates HTML as output;
+- generates readable code and commented in the target language;
+- reports syntax errors back from the compiler to the right line in the
+  literate source;
+- runs fast;
+- markdown based - very easy to read and write Literate source;
+- automatically generates hyperlinks among code sections;
+- formatted output similar to CWEB;
+- creates an index with identifiers used (you need to have exuberant or
+  universal ctags installed to use this feature);
+- supports TeX equations with `$` notation;
 
 # Directory Structure
 
@@ -54,8 +72,8 @@ Subchapters are denoted by tabs, and each chapter is linked to the correct
 As a first step, I'll make a parser for single chapters only, and leave having
 multiple chapters and books for later.
 
-The parser will have 2 main parts to it: the one which represents the various structures
-of a literate program, and the parse function.
+The parser will have 2 main parts to it: the one which represents the various
+ structures of a literate program, and the parse function.
 
 ## src/parser.d
 ```d
@@ -73,7 +91,7 @@ import std.stdio;
 import util;
 import std.string: split, endsWith, startsWith, chomp, replace, strip;
 import std.algorithm: canFind;
-import std.regex: matchAll, matchFirst, regex, ctRegex, splitter;
+import std.regex: matchAll, replaceAll, matchFirst, regex, ctRegex, splitter;
 import std.conv;
 import std.path: extension;
 import std.file;
@@ -98,9 +116,9 @@ are 7 such classes:
 ### Program class
 
 What is a literate program at the highest level? A program has multiple chapters,
-it has a title, and it has various commands associated with it (although some of these
-commands may be overwritten by chapters or even sections). It also has the file it
-originally came from.
+it has a title, and it has various commands associated with it (although some of
+these commands may be overwritten by chapters or even sections). It also has the
+file it originally came from.
 
 ```d
 class Program 
@@ -121,10 +139,10 @@ class Program
 
 ### Chapter class
 
-A chapter is very similar to a program. It has a title, commands, sections, and also
-an original file. In the case of a single file program (which is what we are focusing
-on for the moment) the Program's file and the Chapter's file will be the same. A chapter
-also has a minor number and a major number;
+A chapter is very similar to a program. It has a title, commands, sections, and
+also an original file. In the case of a single file program (which is what we
+are focusing on for the moment) the Program's file and the Chapter's file will
+be the same. A chapter also has a minor number and a major number.
 
 ```d
 class Chapter 
@@ -153,8 +171,8 @@ class Chapter
 
 ### Section class
 
-A section has a title, commands, a number, and a series of blocks, which can either be
-blocks of code, or blocks of prose.
+A section has a title, commands, a number, and a series of blocks, which can
+either be blocks of code, or blocks of prose.
 
 We can also attribute a level to sections which allows us to organize our
 sections hierarchically. Six levels are supported at the moment; in the final 
@@ -202,11 +220,12 @@ class Section
 
 ### Block class
 
-A block is more interesting. It can either be a block of code, or a block of prose, so
-it has a boolean which represents what type it is. It also stores a start line. If it
-is a code block, it also has a name. Finally, it stores an array of lines, and has a function
-called `text()` which just returns the string of the text it contains. A block also contains
-a `codeType` and a `commentString`.
+A block is more interesting. It can either be a block of code, or a block of
+prose, so it has a boolean which represents what type it is. It also stores a
+start line. If it is a code block, it also has a name. Finally, it stores an
+array of lines, and has a function called `text()` which just returns the string
+of the text it contains. A block also contains a `codeType` and 
+a `commentString`.
 
 ```d
 class Block 
@@ -268,8 +287,7 @@ class Command
 
 ### Line class
 
-A line is the lowest level. It stores the line number, the file the line is from, and the
-text for the line itself.
+A line is the lowest level. It stores the line number, the file the line is from, and the text for the line itself.
 
 
 ```d
@@ -295,10 +313,11 @@ class Line
 
 ### Change class
 
-The change class helps when parsing a change statement. It stores the file that is being changed,
-what the text to search for is and what the text to replace it with is. These two things are arrays
-because you can make multiple changes (search and replaces) to one file. In order to
-keep track of the current change, an index is also stored.
+The change class helps when parsing a change statement. It stores the file that 
+is being changed, what the text to search for is and what the text to replace it
+with is. These two things are arrays because you can make multiple changes 
+(search and replaces) to one file. In order to keep track of the current change, 
+an index is also stored.
 
 ```d
 class Change 
@@ -317,8 +336,9 @@ class Change
 }
 ```
 
-That's it for the classes. These 7 classes can be used to represent an entire literate program.
-Now let's get to the actual parse function to turn a text file into a program.
+That's it for the classes. These 7 classes can be used to represent an entire 
+literate program. Now let's get to the actual parse function to turn a text file 
+into a program.
 
 ## Parse functions
 
@@ -402,10 +422,11 @@ Program parseProgram(Program p, string src)
 
 ### parseChapter function
 
-The `parseChapter` function is the more complex one. It parses the source of a chapter.
-Before doing any parsing, we resolve the `@include` statements by replacing them with
-the contents of the file that was included. Then we loop through each line in the source
-and parse it, provided that it is not a comment (starting with `//`);
+The `parseChapter` function is the more complex one. It parses the source of a 
+chapter. Before doing any parsing, we resolve the `@include` statements by
+replacing them with the contents of the file that was included. Then we loop 
+through each line in the source and parse it, provided that it is not a 
+comment (starting with `//`);
 
 ```d
 Chapter parseChapter(Chapter chapter, string src) 
@@ -431,7 +452,7 @@ Chapter parseChapter(Chapter chapter, string src)
     }
 
     // Handle the @include statements
-    /* src = std.regex.replaceAll!(match => include(match[1]))(src, regex(`\n@include (.*)`)); */
+    src = replaceAll!(match => include(match[1]))(src, regex(`\n@include (.*)`));
     string[] linesStr = src.split("\n");
     Line[] lines;
     foreach (lineNum, line; linesStr) 
@@ -456,11 +477,11 @@ Chapter parseChapter(Chapter chapter, string src)
 }
 ```
 
-### The Parse Function Setup
+### The parse function setup
 
-For the initial variables, it would be nice to move the value for `chapter.file` into a variable
-called `filename`. Additionally, I'm going to need an array of all the possible commands that
-are recognized.
+For the initial variables, it would be nice to move the value 
+for `chapter.file` into a variable called `filename`. Additionally, I'm going 
+to need an array of all the possible commands that are recognized.
 
 #### Initialize some variables
 ```d
@@ -469,9 +490,9 @@ string[] commands = ["@code_type", "@comment_type", "@compiler", "@error_format"
                      "@add_css", "@overwrite_css", "@colorscheme", "@include"];
 ```
 
-I also need to keep track of the current section that is being parsed, and the current block that
-is being parsed, because the parser is going through the file one line at a time. I'll also define
-the current change being parsed.
+We also need to keep track of the current section that is being parsed, and the
+current block that is being parsed, because the parser is going through the file
+one line at a time. We'll also define the current change being parsed.
 
 #### Initialize some variables +=
 ```d
@@ -481,8 +502,8 @@ Block curBlock;
 Change curChange;
 ```
 
-Finally, I need 3 flags to keep track of if it is currently parsing a codeblock, a search block,
-or a replace block.
+Finally, 3 flags are needed to keep track of if it is currently parsing a 
+codeblock, a search block, or a replace block.
 
 #### Initialize some variables +=
 ```d
@@ -493,8 +514,9 @@ bool inReplaceBlock = false;
 
 ### Parse the line
 
-When parsing a line, we are either inside a code block, or inside a prose block, or we are transitioning
-from one to the other. So we'll have an if statement to separate the two.
+When parsing a line, we are either inside a code block, or inside a prose block,
+or we are transitioning from one to the other. So we'll have an if statement to 
+separate the two.
 
 ```d
 if (!inCodeblock) 
@@ -524,16 +546,18 @@ else if (curBlock !is null)
 }
 ```
 
-Parsing a command and the title command are both fairly simple, so let's look at them first.
+Parsing a command and the title command are both fairly simple, so let's look at
+them first.
 
-To parse a command we first make sure that there is the command name, and any arguments.
-Then we check if the command is part of the list of commands we have. If it is, we
-create a new command object, fill in the name and arguments, and add it to the chapter object.
+To parse a command we first make sure that there is the command name, and any
+arguments. Then we check if the command is part of the list of commands we have.
+If it is, we create a new command object, fill in the name and arguments, and
+add it to the chapter object.
 
-We also do something special if it is a `@include` command. For these ones, we take the file
-read it, and parse it as a chapter (using the `parseChapter` function). Then we add the
-included chapter's sections to the current chapter's sections. In this case, we don't add
-the `@include` command to the list of chapter commands.
+We also do something special if it is a `@include` command. For these ones, we
+take the file, read it, and parse it as a chapter (using the `parseChapter` 
+function). Then we add the included chapter's sections to the current chapter's
+sections. In this case, we don't add the `@include` command to the list of chapter commands.
 
 #### Parse a command
 ```d
@@ -582,9 +606,9 @@ if (startsWith(line, "@title"))
 
 ### Parse a section definition
 
-When a new section is created (using `#` .. `######`), we should add the current section to the list
-of sections for the chapter, and then we should create a new section, which becomes the
-current section.
+When a new section is created (using `#` .. `######`), we should add the current
+section to the list of sections for the chapter, and then we should create a new
+section, which becomes the current one.
 
 ```d
 else if (line.startsWith("#")) 
@@ -650,9 +674,9 @@ void increaseSectionNum(int level)
 
 ### Parse the beginning of a code block
 
-Codeblocks always begin with three backticks, so we can use a proper regex to represent this.
-Once a new codeblock starts, the old one must be appended to the current section's list of
-blocks, and the current codeblock must be reset.
+Codeblocks always begin with three backticks, so we can use a proper regex to
+represent this. Once a new codeblock starts, the old one must be appended to the 
+current section's list of blocks, and the current codeblock must be reset.
 
 ```d
 else if (matchAll(line, regex("^```.+"))) 
@@ -1280,14 +1304,7 @@ output ~= "<!DOCTYPE html>\n" ~
 
 Now we write the body -- this is the meat of the weaver. First we write
 a couple things at the beginning: making sure the `prettyprint` function is
-called when the page loads, and writing out the title as an `h1`.
-
-Then we loop through each section in the chapter. At the beginning of each section,
-we write the title, and an empty `a` link so that the section title can be linked to.
-We also have to determine if the section title should be a `noheading` class. If the
-section title is empty, then the class should be `noheading` which means that the prose
-will be moved up a bit towards it -- otherwise it looks like there is too much empty space
-between the title and the prose.
+called when the page loads, and writing out the title as a `p`.
 
 ## Write the body
 ```d
@@ -1300,7 +1317,20 @@ output ~= q"DELIMITER
 <div class="col-sm-9">
 DELIMITER";
 output ~= "<p id=\"title\">" ~ c.title ~ "</p>";
+```
 
+## Write the body +=
+
+Then we loop through each section in the chapter. At the beginning of each 
+section, we write the title, and an empty `a` link so that the section title can
+be linked to.
+
+We also have to determine if the section title should be a `noheading` class. If
+the section title is empty, then the class should be `noheading` which means 
+that the prose will be moved up a bit towards it -- otherwise it looks like
+there is too much empty space between the title and the prose.
+
+```d
 foreach (s; c.sections) 
 {
 	string noheading = s.title == "" ? " class=\"noheading\"" : "";
@@ -1330,7 +1360,14 @@ output ~= "</div>\n"; // matches <div class="row">
 
 ## Weave a prose block
 
-Weaving a prose block is not very complicated. 
+Weaving a prose block is not very complicated: 
+
+Here we use the same regex to actually perform the substitution. Double dollars 
+mean a block math which means we have to use a div. For inline math (single 
+dollars) we use a span. After that substitution we replace all backslash dollars
+to real dollar signs.
+
+Finally we add this html to the output and add a newline for good measure.
 
 ```d
 string html;
@@ -1403,15 +1440,9 @@ else
 
 ```
 
-Here we use the same regex to actually perform the substitution. Double dollars mean a block math
-which means we have to use a div. For inline math (single dollars) we use a span. After that substitution
-we replace all backslash dollars to real dollar signs.
-
-Finally we add this html to the output and add a newline for good measure.
-
 ### Weave a prose block +=
 ```d
-output ~= md ~ "\n";
+output ~= html ~ "\n";
 ```
 
 ## Weave a code block
@@ -1679,8 +1710,8 @@ the entire source for katex, but it will use worse fonts (still better than noth
 
 ### Write the katex source
 ```d
-output ~= "<link rel=\"stylesheet\" href=\"http://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.3.0/katex.min.css\">\n" ~
-"<script src=\"http://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.3.0/katex.min.js\"></script>\n";
+output ~= "<link rel=\"stylesheet\" href=\"https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.1/katex.min.css\">\n" ~
+"<script src=\"https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.1/katex.min.js\"></script>\n";
 ```
 
 Then we loop over all the math divs and spans and render the katex.
@@ -2415,7 +2446,7 @@ string matlab = q"DELIMITER
     PR_TRANSPOSE = "transpose",
     PR_LINE_CONTINUATION = "linecont";
 
-  // Refer to: http://www.mathworks.com/help/matlab/functionlist-alpha.html
+  // Refer to: https://www.mathworks.com/help/matlab/functionlist-alpha.html
   var coreFunctions = [
     'abs|accumarray|acos(?:d|h)?|acot(?:d|h)?|acsc(?:d|h)?|actxcontrol(?:list|select)?|actxGetRunningServer|actxserver|addlistener|addpath|addpref|addtodate|airy|align|alim|all|allchild|alpha|alphamap|amd|ancestor|and|angle|annotation|any|area|arrayfun|asec(?:d|h)?|asin(?:d|h)?|assert|assignin|atan(?:2|d|h)?|audiodevinfo|audioplayer|audiorecorder|aufinfo|auread|autumn|auwrite|avifile|aviinfo|aviread|axes|axis|balance|bar(?:3|3h|h)?|base2dec|beep|BeginInvoke|bench|bessel(?:h|i|j|k|y)|beta|betainc|betaincinv|betaln|bicg|bicgstab|bicgstabl|bin2dec|bitand|bitcmp|bitget|bitmax|bitnot|bitor|bitset|bitshift|bitxor|blanks|blkdiag|bone|box|brighten|brush|bsxfun|builddocsearchdb|builtin|bvp4c|bvp5c|bvpget|bvpinit|bvpset|bvpxtend|calendar|calllib|callSoapService|camdolly|cameratoolbar|camlight|camlookat|camorbit|campan|campos|camproj|camroll|camtarget|camup|camva|camzoom|cart2pol|cart2sph|cast|cat|caxis|cd|cdf2rdf|cdfepoch|cdfinfo|cdflib(?:\.(?:close|closeVar|computeEpoch|computeEpoch16|create|createAttr|createVar|delete|deleteAttr|deleteAttrEntry|deleteAttrgEntry|deleteVar|deleteVarRecords|epoch16Breakdown|epochBreakdown|getAttrEntry|getAttrgEntry|getAttrMaxEntry|getAttrMaxgEntry|getAttrName|getAttrNum|getAttrScope|getCacheSize|getChecksum|getCompression|getCompressionCacheSize|getConstantNames|getConstantValue|getCopyright|getFileBackward|getFormat|getLibraryCopyright|getLibraryVersion|getMajority|getName|getNumAttrEntries|getNumAttrgEntries|getNumAttributes|getNumgAttributes|getReadOnlyMode|getStageCacheSize|getValidate|getVarAllocRecords|getVarBlockingFactor|getVarCacheSize|getVarCompression|getVarData|getVarMaxAllocRecNum|getVarMaxWrittenRecNum|getVarName|getVarNum|getVarNumRecsWritten|getVarPadValue|getVarRecordData|getVarReservePercent|getVarsMaxWrittenRecNum|getVarSparseRecords|getVersion|hyperGetVarData|hyperPutVarData|inquire|inquireAttr|inquireAttrEntry|inquireAttrgEntry|inquireVar|open|putAttrEntry|putAttrgEntry|putVarData|putVarRecordData|renameAttr|renameVar|setCacheSize|setChecksum|setCompression|setCompressionCacheSize|setFileBackward|setFormat|setMajority|setReadOnlyMode|setStageCacheSize|setValidate|setVarAllocBlockRecords|setVarBlockingFactor|setVarCacheSize|setVarCompression|setVarInitialRecs|setVarPadValue|SetVarReservePercent|setVarsCacheSize|setVarSparseRecords))?|cdfread|cdfwrite|ceil|cell2mat|cell2struct|celldisp|cellfun|cellplot|cellstr|cgs|checkcode|checkin|checkout|chol|cholinc|cholupdate|circshift|cla|clabel|class|clc|clear|clearvars|clf|clipboard|clock|close|closereq|cmopts|cmpermute|cmunique|colamd|colon|colorbar|colordef|colormap|colormapeditor|colperm|Combine|comet|comet3|commandhistory|commandwindow|compan|compass|complex|computer|cond|condeig|condest|coneplot|conj|containers\.Map|contour(?:3|c|f|slice)?|contrast|conv|conv2|convhull|convhulln|convn|cool|copper|copyfile|copyobj|corrcoef|cos(?:d|h)?|cot(?:d|h)?|cov|cplxpair|cputime|createClassFromWsdl|createSoapMessage|cross|csc(?:d|h)?|csvread|csvwrite|ctranspose|cumprod|cumsum|cumtrapz|curl|customverctrl|cylinder|daqread|daspect|datacursormode|datatipinfo|date|datenum|datestr|datetick|datevec|dbclear|dbcont|dbdown|dblquad|dbmex|dbquit|dbstack|dbstatus|dbstep|dbstop|dbtype|dbup|dde23|ddeget|ddesd|ddeset|deal|deblank|dec2base|dec2bin|dec2hex|decic|deconv|del2|delaunay|delaunay3|delaunayn|DelaunayTri|delete|demo|depdir|depfun|det|detrend|deval|diag|dialog|diary|diff|diffuse|dir|disp|display|dither|divergence|dlmread|dlmwrite|dmperm|doc|docsearch|dos|dot|dragrect|drawnow|dsearch|dsearchn|dynamicprops|echo|echodemo|edit|eig|eigs|ellipj|ellipke|ellipsoid|empty|enableNETfromNetworkDrive|enableservice|EndInvoke|enumeration|eomday|eq|erf|erfc|erfcinv|erfcx|erfinv|error|errorbar|errordlg|etime|etree|etreeplot|eval|evalc|evalin|event\.(?:EventData|listener|PropertyEvent|proplistener)|exifread|exist|exit|exp|expint|expm|expm1|export2wsdlg|eye|ezcontour|ezcontourf|ezmesh|ezmeshc|ezplot|ezplot3|ezpolar|ezsurf|ezsurfc|factor|factorial|fclose|feather|feature|feof|ferror|feval|fft|fft2|fftn|fftshift|fftw|fgetl|fgets|fieldnames|figure|figurepalette|fileattrib|filebrowser|filemarker|fileparts|fileread|filesep|fill|fill3|filter|filter2|find|findall|findfigs|findobj|findstr|finish|fitsdisp|fitsinfo|fitsread|fitswrite|fix|flag|flipdim|fliplr|flipud|floor|flow|fminbnd|fminsearch|fopen|format|fplot|fprintf|frame2im|fread|freqspace|frewind|fscanf|fseek|ftell|FTP|full|fullfile|func2str|functions|funm|fwrite|fzero|gallery|gamma|gammainc|gammaincinv|gammaln|gca|gcbf|gcbo|gcd|gcf|gco|ge|genpath|genvarname|get|getappdata|getenv|getfield|getframe|getpixelposition|getpref|ginput|gmres|gplot|grabcode|gradient|gray|graymon|grid|griddata(?:3|n)?|griddedInterpolant|gsvd|gt|gtext|guidata|guide|guihandles|gunzip|gzip|h5create|h5disp|h5info|h5read|h5readatt|h5write|h5writeatt|hadamard|handle|hankel|hdf|hdf5|hdf5info|hdf5read|hdf5write|hdfinfo|hdfread|hdftool|help|helpbrowser|helpdesk|helpdlg|helpwin|hess|hex2dec|hex2num|hgexport|hggroup|hgload|hgsave|hgsetget|hgtransform|hidden|hilb|hist|histc|hold|home|horzcat|hostid|hot|hsv|hsv2rgb|hypot|ichol|idivide|ifft|ifft2|ifftn|ifftshift|ilu|im2frame|im2java|imag|image|imagesc|imapprox|imfinfo|imformats|import|importdata|imread|imwrite|ind2rgb|ind2sub|inferiorto|info|inline|inmem|inpolygon|input|inputdlg|inputname|inputParser|inspect|instrcallback|instrfind|instrfindall|int2str|integral(?:2|3)?|interp(?:1|1q|2|3|ft|n)|interpstreamspeed|intersect|intmax|intmin|inv|invhilb|ipermute|isa|isappdata|iscell|iscellstr|ischar|iscolumn|isdir|isempty|isequal|isequaln|isequalwithequalnans|isfield|isfinite|isfloat|isglobal|ishandle|ishghandle|ishold|isinf|isinteger|isjava|iskeyword|isletter|islogical|ismac|ismatrix|ismember|ismethod|isnan|isnumeric|isobject|isocaps|isocolors|isonormals|isosurface|ispc|ispref|isprime|isprop|isreal|isrow|isscalar|issorted|isspace|issparse|isstr|isstrprop|isstruct|isstudent|isunix|isvarname|isvector|javaaddpath|javaArray|javachk|javaclasspath|javacomponent|javaMethod|javaMethodEDT|javaObject|javaObjectEDT|javarmpath|jet|keyboard|kron|lasterr|lasterror|lastwarn|lcm|ldivide|ldl|le|legend|legendre|length|libfunctions|libfunctionsview|libisloaded|libpointer|libstruct|license|light|lightangle|lighting|lin2mu|line|lines|linkaxes|linkdata|linkprop|linsolve|linspace|listdlg|listfonts|load|loadlibrary|loadobj|log|log10|log1p|log2|loglog|logm|logspace|lookfor|lower|ls|lscov|lsqnonneg|lsqr|lt|lu|luinc|magic|makehgtform|mat2cell|mat2str|material|matfile|matlab\.io\.MatFile|matlab\.mixin\.(?:Copyable|Heterogeneous(?:\.getDefaultScalarElement)?)|matlabrc|matlabroot|max|maxNumCompThreads|mean|median|membrane|memmapfile|memory|menu|mesh|meshc|meshgrid|meshz|meta\.(?:class(?:\.fromName)?|DynamicProperty|EnumeratedValue|event|MetaData|method|package(?:\.(?:fromName|getAllPackages))?|property)|metaclass|methods|methodsview|mex(?:\.getCompilerConfigurations)?|MException|mexext|mfilename|min|minres|minus|mislocked|mkdir|mkpp|mldivide|mlint|mlintrpt|mlock|mmfileinfo|mmreader|mod|mode|more|move|movefile|movegui|movie|movie2avi|mpower|mrdivide|msgbox|mtimes|mu2lin|multibandread|multibandwrite|munlock|namelengthmax|nargchk|narginchk|nargoutchk|native2unicode|nccreate|ncdisp|nchoosek|ncinfo|ncread|ncreadatt|ncwrite|ncwriteatt|ncwriteschema|ndgrid|ndims|ne|NET(?:\.(?:addAssembly|Assembly|convertArray|createArray|createGeneric|disableAutoRelease|enableAutoRelease|GenericClass|invokeGenericMethod|NetException|setStaticProperty))?|netcdf\.(?:abort|close|copyAtt|create|defDim|defGrp|defVar|defVarChunking|defVarDeflate|defVarFill|defVarFletcher32|delAtt|endDef|getAtt|getChunkCache|getConstant|getConstantNames|getVar|inq|inqAtt|inqAttID|inqAttName|inqDim|inqDimID|inqDimIDs|inqFormat|inqGrpName|inqGrpNameFull|inqGrpParent|inqGrps|inqLibVers|inqNcid|inqUnlimDims|inqVar|inqVarChunking|inqVarDeflate|inqVarFill|inqVarFletcher32|inqVarID|inqVarIDs|open|putAtt|putVar|reDef|renameAtt|renameDim|renameVar|setChunkCache|setDefaultFormat|setFill|sync)|newplot|nextpow2|nnz|noanimate|nonzeros|norm|normest|not|notebook|now|nthroot|null|num2cell|num2hex|num2str|numel|nzmax|ode(?:113|15i|15s|23|23s|23t|23tb|45)|odeget|odeset|odextend|onCleanup|ones|open|openfig|opengl|openvar|optimget|optimset|or|ordeig|orderfields|ordqz|ordschur|orient|orth|pack|padecoef|pagesetupdlg|pan|pareto|parseSoapResponse|pascal|patch|path|path2rc|pathsep|pathtool|pause|pbaspect|pcg|pchip|pcode|pcolor|pdepe|pdeval|peaks|perl|perms|permute|pie|pink|pinv|planerot|playshow|plot|plot3|plotbrowser|plotedit|plotmatrix|plottools|plotyy|plus|pol2cart|polar|poly|polyarea|polyder|polyeig|polyfit|polyint|polyval|polyvalm|pow2|power|ppval|prefdir|preferences|primes|print|printdlg|printopt|printpreview|prod|profile|profsave|propedit|propertyeditor|psi|publish|PutCharArray|PutFullMatrix|PutWorkspaceData|pwd|qhull|qmr|qr|qrdelete|qrinsert|qrupdate|quad|quad2d|quadgk|quadl|quadv|questdlg|quit|quiver|quiver3|qz|rand|randi|randn|randperm|RandStream(?:\.(?:create|getDefaultStream|getGlobalStream|list|setDefaultStream|setGlobalStream))?|rank|rat|rats|rbbox|rcond|rdivide|readasync|real|reallog|realmax|realmin|realpow|realsqrt|record|rectangle|rectint|recycle|reducepatch|reducevolume|refresh|refreshdata|regexp|regexpi|regexprep|regexptranslate|rehash|rem|Remove|RemoveAll|repmat|reset|reshape|residue|restoredefaultpath|rethrow|rgb2hsv|rgb2ind|rgbplot|ribbon|rmappdata|rmdir|rmfield|rmpath|rmpref|rng|roots|rose|rosser|rot90|rotate|rotate3d|round|rref|rsf2csf|run|save|saveas|saveobj|savepath|scatter|scatter3|schur|sec|secd|sech|selectmoveresize|semilogx|semilogy|sendmail|serial|set|setappdata|setdiff|setenv|setfield|setpixelposition|setpref|setstr|setxor|shading|shg|shiftdim|showplottool|shrinkfaces|sign|sin(?:d|h)?|size|slice|smooth3|snapnow|sort|sortrows|sound|soundsc|spalloc|spaugment|spconvert|spdiags|specular|speye|spfun|sph2cart|sphere|spinmap|spline|spones|spparms|sprand|sprandn|sprandsym|sprank|spring|sprintf|spy|sqrt|sqrtm|squeeze|ss2tf|sscanf|stairs|startup|std|stem|stem3|stopasync|str2double|str2func|str2mat|str2num|strcat|strcmp|strcmpi|stream2|stream3|streamline|streamparticles|streamribbon|streamslice|streamtube|strfind|strjust|strmatch|strncmp|strncmpi|strread|strrep|strtok|strtrim|struct2cell|structfun|strvcat|sub2ind|subplot|subsasgn|subsindex|subspace|subsref|substruct|subvolume|sum|summer|superclasses|superiorto|support|surf|surf2patch|surface|surfc|surfl|surfnorm|svd|svds|swapbytes|symamd|symbfact|symmlq|symrcm|symvar|system|tan(?:d|h)?|tar|tempdir|tempname|tetramesh|texlabel|text|textread|textscan|textwrap|tfqmr|throw|tic|Tiff(?:\.(?:getTagNames|getVersion))?|timer|timerfind|timerfindall|times|timeseries|title|toc|todatenum|toeplitz|toolboxdir|trace|transpose|trapz|treelayout|treeplot|tril|trimesh|triplequad|triplot|TriRep|TriScatteredInterp|trisurf|triu|tscollection|tsearch|tsearchn|tstool|type|typecast|uibuttongroup|uicontextmenu|uicontrol|uigetdir|uigetfile|uigetpref|uiimport|uimenu|uiopen|uipanel|uipushtool|uiputfile|uiresume|uisave|uisetcolor|uisetfont|uisetpref|uistack|uitable|uitoggletool|uitoolbar|uiwait|uminus|undocheckout|unicode2native|union|unique|unix|unloadlibrary|unmesh|unmkpp|untar|unwrap|unzip|uplus|upper|urlread|urlwrite|usejava|userpath|validateattributes|validatestring|vander|var|vectorize|ver|verctrl|verLessThan|version|vertcat|VideoReader(?:\.isPlatformSupported)?|VideoWriter(?:\.getProfiles)?|view|viewmtx|visdiff|volumebounds|voronoi|voronoin|wait|waitbar|waitfor|waitforbuttonpress|warndlg|warning|waterfall|wavfinfo|wavplay|wavread|wavrecord|wavwrite|web|weekday|what|whatsnew|which|whitebg|who|whos|wilkinson|winopen|winqueryreg|winter|wk1finfo|wk1read|wk1write|workspace|xlabel|xlim|xlsfinfo|xlsread|xlswrite|xmlread|xmlwrite|xor|xslt|ylabel|ylim|zeros|zip|zlabel|zlim|zoom'
   ].join("|");
@@ -2902,9 +2933,8 @@ Options:
 DELIMITER";
 ```
 
-This program uses a number of block modifiers in order to facilitate certain functionality.
-i.e. If you don't wish a code block to be woven into the final HTML then the `noWeave`
-modifier will indicate this for you.
+This program uses a number of block modifiers in order to facilitate certain functionality. For instance, if you don't wish a code block to be woven 
+into the final HTML then the `noWeave` modifier will do this for you.
 
 Each modifier is represented by this list of enums:
 
@@ -3146,6 +3176,8 @@ Supported compilers/linters are:
 * `pyflakes`
 * `jshint`
 * `dmd`
+* `rustc`
+* `cargo`
 
 ## Check for compiler errors +=
 ```d
@@ -3158,6 +3190,8 @@ if (errorFormat is null)
     else if (compilerCmd.indexOf("pyflakes") != -1) { errorFormat = "%f:%l:(%s:)? %m"; }
     else if (compilerCmd.indexOf("jshint") != -1) { errorFormat = "%f: line %l,%s, %m"; }
     else if (compilerCmd.indexOf("dmd") != -1) { errorFormat = "%f\\(%l\\):%s: %m"; }
+    else if (compilerCmd.indexOf("cargo") != -1) { errorFormat = "%s --> %f:%l:%m%s"; }
+    else if (compilerCmd.indexOf("rustc") != -1) { errorFormat = "%s --> %f:%l:%m%s"; }
 }
 ```
 
@@ -3198,7 +3232,7 @@ if (errorFormat !is null)
             string fname = matches["filename"];
             string message = matches["message"];
 
-            if (linenum != "" && fname != "") 
+            if (matches && linenum != "" && fname != "") 
             {
                 if (codeLinenums[fname].length > to!int(linenum)) 
                 {
@@ -3472,3 +3506,35 @@ string getChapterHtmlFile(Chapter[] chapters, string num)
 }
 ```
 
+# How to build
+
+Building Literate is done by a simple Makefile that is edited
+manually. The build dependencies are listed here below in this section. It
+seems to be a better overall philosophy to build everything manually than to
+use a system that shadows a lot of the details - this generally hinders
+understanding significantly.
+
+## "Makefile" -comment
+
+```make
+Literate.html: Literate.md
+	bin/lit Literate.md
+
+fullbuild: Literate.html $(sources)
+	dmd $(sources) -od=obj -of=bin/lit 
+	bin/lit Literate.md
+
+build: $(sources)
+	dmd $(sources) -od=obj -of=bin/lit
+
+sources = src/globals.d \
+		  src/main.d \
+		  src/parser.d \
+		  src/tangler.d \
+		  src/util.d \
+		  src/weaver.d \
+		  src/dmarkdown/html.d \
+		  src/dmarkdown/markdown.d \
+		  src/dmarkdown/package.d \
+		  src/dmarkdown/string.d
+```
