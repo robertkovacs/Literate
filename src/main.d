@@ -125,6 +125,8 @@ void lit(string filename, string fileSrc)
             else if (compilerCmd.indexOf("pyflakes") != -1) { errorFormat = "%f:%l:(%s:)? %m"; }
             else if (compilerCmd.indexOf("jshint") != -1) { errorFormat = "%f: line %l,%s, %m"; }
             else if (compilerCmd.indexOf("dmd") != -1) { errorFormat = "%f\\(%l\\):%s: %m"; }
+            else if (compilerCmd.indexOf("cargo") != -1) { errorFormat = "%s --> %f:%l:%m%s"; }
+            else if (compilerCmd.indexOf("rustc") != -1) { errorFormat = "%s --> %f:%l:%m%s"; }
         }
         if (errorFormat !is null) 
         {
@@ -156,7 +158,7 @@ void lit(string filename, string fileSrc)
                     string fname = matches["filename"];
                     string message = matches["message"];
         
-                    if (linenum != "" && fname != "") 
+                    if (matches && linenum != "" && fname != "") 
                     {
                         if (codeLinenums[fname].length > to!int(linenum)) 
                         {

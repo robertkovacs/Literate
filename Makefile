@@ -18,3 +18,4 @@ sources = src/globals.d \
 		  src/dmarkdown/markdown.d \
 		  src/dmarkdown/package.d \
 		  src/dmarkdown/string.d
+
