@@ -6,7 +6,7 @@ This fork introduces the following changes:
 
 * multiple section levels are allowed;
 * standard Markdown notation is used for section headers;
-* code block titles are generated from section headers;
+* section header anchors are created - just as in Github flavored Markdown;
 * Markdown-compatible information for code block language syntax highlighting is supported;
 
 The maintainers of this fork thank Zachary Yedidia, the original author for his work.
