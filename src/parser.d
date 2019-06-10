@@ -53,6 +53,7 @@ class Chapter
 }
 
 // Section class
+
 class Section 
 {
     public string title;
@@ -67,6 +68,8 @@ class Section
         blocks = [];
     }
 
+    // numToString method
+    
     string numToString() 
     {
         string numString;
@@ -77,6 +80,7 @@ class Section
         }
         return numString;
     }
+
 }
 
 // Block class
@@ -132,6 +136,7 @@ class Command
 }
 
 // Line class
+
 class Line 
 {
     public string file;
@@ -169,6 +174,7 @@ class Change
 
 
 // Parse functions
+
 // parseProgram function
 Program parseProgram(Program p, string src) 
 {
@@ -226,6 +232,7 @@ Program parseProgram(Program p, string src)
 }
 
 // parseChapter function
+
 Chapter parseChapter(Chapter chapter, string src) 
 {
     // Initialize some variables
@@ -453,12 +460,15 @@ Chapter parseChapter(Chapter chapter, string src)
                 curBlock = new Block();
                 curBlock.startLine = lineObj;
                 curBlock.isCodeblock = true;
-                curBlock.name = curSection.title;
+                // curBlock.name = curSection.title;
             
                 // Parse Modifiers
-                auto checkForModifiers = ctRegex!(`(?P<namea>\S.*)[ \t]-{3}[ \t](?P<modifiers>.+)|(?P<nameb>\S.*?)[ \t]*?(-{1,}$|$)`);
+                // auto checkForModifiers = ctRegex!(`[ \t]-{3}[ \t](?P<namea>\S.*)[ \t]-{3}[ \t](?P<modifiers>.+)|(?P<nameb>\S.*?)[ \t]*?(-{1,}$|$)`);
+                auto checkForModifiers = ctRegex!(r"```[\S]+[ \t]-{3}[ \t](?P<namea>.+)[ \t]-{3}[ \t](?P<modifiers>.+)|```[\S]+[ \t]-{3}[ \t](?P<nameb>\S.*?)[ \t]*?(-{1,}$|$)");
                 auto splitOnSpace = ctRegex!(r"(\s+)");
-                auto modMatch = matchFirst(curBlock.name, checkForModifiers);
+                auto modMatch = matchFirst(curBlock.startLine.text, checkForModifiers);
+                writeln("namea: ", modMatch["namea"]);
+                writeln("nameb: ", modMatch["nameb"]);
                 
                 // matchFirst returns unmatched groups as empty strings
                 

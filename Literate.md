@@ -8,22 +8,13 @@
 
 # Introduction
 
-This is an implementation of a literate programming system in D.
-The goal is to be able to create books that one can read on a website;
-with chapters, subchapters, and sections, and additionally to be able
-to compile the code from the book into a working program.
+This is an implementation of a literate programming system in D. The goal is to be able to create books that one can read on a website; with chapters, subchapters, and sections, and additionally to be able to compile the code from the book into a working program.
 
-Literate programming aims to make the source code of a program
-understandable. The program can be structured in any way the
-programmer likes, and the code should be explained.
+Literate programming aims to make the source code of a program understandable. The program can be structured in any way the programmer likes, and the code should be explained.
 
-The source code for a literate program will somewhat resemble
-CWEB, but differ in many key ways which simplifies the source code
-and make it easier to read. Literate uses @ signs for commands
-and markdown to style the prose.
+The source code for a literate program will somewhat resemble CWEB, but differ in many key ways which simplify the source code and make it easier to read. Literate uses `@` signs for commands and markdown to style the prose.
 
-Here is the full list of features (this is from 
-the [original manual](http://literate.zbyedidia.webfactional.com)):
+Here is the full list of features (this is from the [original manual](http://literate.zbyedidia.webfactional.com)):
 
 - supports any language including syntax highlighting and pretty printing
   in HTML;
@@ -41,20 +32,11 @@ the [original manual](http://literate.zbyedidia.webfactional.com)):
 
 # Directory Structure
 
-A literate program may be just a single file, but it should also be
-possible to make a book out of it, with chapters and possibly multiple
-programs in a single book. If the literate command line tool is run on
-a single file, it should compile that file, if it is run on a directory,
-it should search for the `Summary.md` file in the directory and create a
-book.
+A literate program may be just a single file, but it should also be possible to make a book out of it, with chapters and possibly multiple programs in a single book. If the literate command line tool is run on a single file, it should compile that file, if it is run on a directory, it should search for the `Summary.md` file in the directory and create a book.
 
-What should the directory structure of a Literate book look like?
-I try to mimic the [Gitbook](https://github.com/GitbookIO/gitbook) software
-here. There will be a `Summary.md` file which links to each of the
-different chapters in the book. An example `Summary.md` file might look
-like this:
+What should the directory structure of a Literate book look like? We try to mimic the [Gitbook](https://github.com/GitbookIO/gitbook) software here. There will be a `Summary.md` file which links to each of the different chapters in the book. An example `Summary.md` file might look like this:
 
-```lit
+```lit --- Example lit summary ---
     @title Title of the book
 
     [Chapter 1](chapter1/intro.md)
@@ -64,28 +46,25 @@ like this:
         [Subchapter 1](chapter2/example1.md)
 ```
 
-Subchapters are denoted by tabs, and each chapter is linked to the correct
-`.md` file using Markdown link syntax.
+Subchapters are denoted by tabs, and each chapter is linked to the correct `.md` file using Markdown link syntax.
 
 # The Parser
 
-As a first step, I'll make a parser for single chapters only, and leave having
-multiple chapters and books for later.
-
-The parser will have 2 main parts to it: the one which represents the various
- structures of a literate program, and the parse function.
+As a first step, I'll make a parser for single chapters only, and leave having multiple chapters and books for later. The parser will have 2 main parts to it: the one which represents the various structures of a literate program, and the parse function.
 
 ## src/parser.d
-```d
+
+```d --- src/parser.d ---
 @{Parser imports}
 @{Classes}
 @{Parse functions}
 ```
 
-I'll quickly list the imports here.
+Let's list the imports here.
 
 ## Parser imports
-```d
+
+```d --- Parser imports ---
 import globals;
 import std.stdio;
 import util;
@@ -100,10 +79,9 @@ import std.array;
 
 ## Classes
 
-Now we have to define the classes used to represent a literate program. There
-are 7 such classes:
+Now we have to define the classes used to represent a literate program. There are 7 such classes:
 
-```d
+```d --- Classes ---
 @{Program class}
 @{Chapter class}
 @{Section class}
@@ -115,17 +93,19 @@ are 7 such classes:
 
 ### Program class
 
-What is a literate program at the highest level? A program has multiple chapters,
-it has a title, and it has various commands associated with it (although some of
-these commands may be overwritten by chapters or even sections). It also has the
-file it originally came from.
+What is a literate program at the highest level? A program has multiple chapters, it has a title, and it has various commands associated with it (although some of these commands may be overwritten by chapters or even sections).
 
-```d
+```d --- Program class ---
 class Program 
 {
     public string title;
     public Command[] commands;
     public Chapter[] chapters;
+```
+
+It also has the file it originally came from.
+
+```d --- Program class --- +=
     public string file;
     public string text;
 
@@ -139,12 +119,11 @@ class Program
 
 ### Chapter class
 
-A chapter is very similar to a program. It has a title, commands, sections, and
-also an original file. In the case of a single file program (which is what we
-are focusing on for the moment) the Program's file and the Chapter's file will
-be the same. A chapter also has a minor number and a major number.
+A chapter is very similar to a program. It has a title, commands, sections, and also an original file. In the case of a single file program (which is what we are focusing on for the moment) the Program's file and the Chapter's file will be the same. A chapter also has a minor number and a major number.
 
-```d
+(TODO: this major-minor number system needs to be extended to allow multiple levels at the book level too.)
+
+```d --- Chapter class ---
 class Chapter 
 {
     public string title;
@@ -171,26 +150,14 @@ class Chapter
 
 ### Section class
 
-A section has a title, commands, a number, and a series of blocks, which can
-either be blocks of code, or blocks of prose.
+A section has a title, commands, a number, and a series of blocks, which can either be blocks of code, or blocks of prose.
 
-We can also attribute a level to sections which allows us to organize our
-sections hierarchically. Six levels are supported at the moment; in the final 
-document these are translated to HTML tags `&lt;h1&gt;` to `&lt;h6&gt;`.
+We can also attribute a level to sections which allows us to organize our sections hierarchically. Six levels are supported at the moment; in the final  document these are translated to HTML tags `&lt;h1&gt;` to `&lt;h6&gt;`.
 
-Accordingly, the section number is an array of six numbers in fact. Two
-support functions are needed to handle the number array seamlessly:
+Accordingly, the section number is an array of six numbers in fact. 
 
-* First we need a function to convert this array to a string - the `numToString`
-  class method does this for us. The only trick we need to consider here is not
-  to include trailing zeros to our result string.
+```d --- Section class ---
 
-* Second, we need a function to increase the numbering according to the section's
-  level. The `increaseSectionNum` function called during chapter parsing (i.e.
-  in the `parseChapter` call) is responsible for this (for more details see the
-  description of `parseChapter`).
-
-```d
 class Section 
 {
     public string title;
@@ -205,29 +172,36 @@ class Section
         blocks = [];
     }
 
-    string numToString() 
-    {
-        string numString;
-        for(int i = 5; i >= 0; i--) 
-        {
-            if (numString == "" && num[i] == 0) continue;
-            numString = to!string(num[i]) ~ (numString == "" ? "" : ".") ~ numString;
-        }
-        return numString;
-    }
+    @{numToString method}
 }
 ```
 
+Two support functions are needed to handle the number array seamlessly:
+
+* First we need a function to convert this array to a string - the `numToString` class method does this for us. The only trick we need to consider here is not to include trailing zeros to our result string.
+
+```d --- numToString method ---
+
+string numToString() 
+{
+    string numString;
+    for(int i = 5; i >= 0; i--) 
+    {
+        if (numString == "" && num[i] == 0) continue;
+        numString = to!string(num[i]) ~ (numString == "" ? "" : ".") ~ numString;
+    }
+    return numString;
+}
+```
+
+* Second, we need a function to increase the numbering according to the section's level. The `increaseSectionNum` function called during chapter parsing (i.e. in the `parseChapter` call) is responsible for this (for more details see the description of `parseChapter`).
+
+
 ### Block class
 
-A block is more interesting. It can either be a block of code, or a block of
-prose, so it has a boolean which represents what type it is. It also stores a
-start line. If it is a code block, it also has a name. Finally, it stores an
-array of lines, and has a function called `text()` which just returns the string
-of the text it contains. A block also contains a `codeType` and 
-a `commentString`.
+A block is more interesting. It can either be a block of code, or a block of prose, so it has a boolean which represents what type it is. It also stores a start line. If it is a code block, it also has a name. Finally, it stores an array of lines, and has a function called `text()` which just returns the string of the text it contains. A block also contains a `codeType` and a `commentString`.
 
-```d
+```d --- Block class ---
 class Block 
 {
     public Line startLine;
@@ -275,7 +249,7 @@ class Block
 
 A command is quite simple. It has a name, and any arguments that are passed.
 
-```d
+```d --- Command class ---
 class Command 
 {
     public string name;
@@ -289,8 +263,8 @@ class Command
 
 A line is the lowest level. It stores the line number, the file the line is from, and the text for the line itself.
 
+```d --- Line class ---
 
-```d
 class Line 
 {
     public string file;
@@ -313,13 +287,9 @@ class Line
 
 ### Change class
 
-The change class helps when parsing a change statement. It stores the file that 
-is being changed, what the text to search for is and what the text to replace it
-with is. These two things are arrays because you can make multiple changes 
-(search and replaces) to one file. In order to keep track of the current change, 
-an index is also stored.
+The change class helps when parsing a change statement (more information on the change statement is available in section [Parse change block](#parse-change-block). It stores the file that is being changed, what the text to search for is and what the text to replace it with is. These two things are arrays because you can make multiple changes (search and replaces) to one file. In order to keep track of the current change, an index is also stored.
 
-```d
+```d --- Change class ---
 class Change 
 {
     public string filename;
@@ -336,15 +306,15 @@ class Change
 }
 ```
 
-That's it for the classes. These 7 classes can be used to represent an entire 
-literate program. Now let's get to the actual parse function to turn a text file 
-into a program.
+
+That's it for the classes. These 7 classes can be used to represent an entire literate program. Now let's get to the actual parse function to turn a text file into a program.
 
 ## Parse functions
 
 Here we have two functions: `parseProgram` and `parseChapter`.
 
-```d
+```d --- Parse functions ---
+
 @{parseProgram function}
 @{parseChapter function}
 ```
@@ -356,14 +326,14 @@ This function takes a literate book source and parses each chapter and returns t
 Here is an example book:
 
     @title Title of the book
-
+    
     [Chapter 1](chapter1/intro.lit)
         [Subchapter 1](chapter1/example1.lit)
         [Subchapter 2](chapter1/example2.lit)
     [Chapter 2](section2/intro.lit)
         [Subchapter 1](chapter2/example1.lit)
 
-```d
+```d --- parseProgram function ---
 Program parseProgram(Program p, string src) 
 {
     string filename = p.file;
@@ -428,7 +398,8 @@ replacing them with the contents of the file that was included. Then we loop
 through each line in the source and parse it, provided that it is not a 
 comment (starting with `//`);
 
-```d
+```d --- parseChapter function ---
+
 Chapter parseChapter(Chapter chapter, string src) 
 {
     @{Initialize some variables}
@@ -479,34 +450,26 @@ Chapter parseChapter(Chapter chapter, string src)
 
 ### The parse function setup
 
-For the initial variables, it would be nice to move the value 
-for `chapter.file` into a variable called `filename`. Additionally, I'm going 
-to need an array of all the possible commands that are recognized.
+For the initial variables, it would be nice to move the value for `chapter.file` into a variable called `filename`. Additionally, I'm going to need an array of all the possible commands that are recognized.
 
-#### Initialize some variables
-```d
+```d --- Initialize some variables ---
 string filename = chapter.file;
 string[] commands = ["@code_type", "@comment_type", "@compiler", "@error_format",
                      "@add_css", "@overwrite_css", "@colorscheme", "@include"];
 ```
 
-We also need to keep track of the current section that is being parsed, and the
-current block that is being parsed, because the parser is going through the file
-one line at a time. We'll also define the current change being parsed.
+We also need to keep track of the current section that is being parsed, and the current block that is being parsed, because the parser is going through the file one line at a time. We'll also define the current change being parsed.
 
-#### Initialize some variables +=
-```d
+```d --- Initialize some variables --- +=
 Section curSection;
 int[6] sectionNum = [0, 0, 0, 0, 0, 0];
 Block curBlock;
 Change curChange;
 ```
 
-Finally, 3 flags are needed to keep track of if it is currently parsing a 
-codeblock, a search block, or a replace block.
+Finally, 3 flags are needed to keep track of if it is currently parsing a codeblock, a search block, or a replace block.
 
-#### Initialize some variables +=
-```d
+```d --- Initialize some variables --- +=
 bool inCodeblock = false;
 bool inSearchBlock = false;
 bool inReplaceBlock = false;
@@ -514,11 +477,9 @@ bool inReplaceBlock = false;
 
 ### Parse the line
 
-When parsing a line, we are either inside a code block, or inside a prose block,
-or we are transitioning from one to the other. So we'll have an if statement to 
-separate the two.
+When parsing a line, we are either inside a code block, or inside a prose block, or we are transitioning from one to the other. So we'll have an if statement to separate the two.
 
-```d
+```d --- Parse the line ---
 if (!inCodeblock) 
 {
     // This might be a change block
@@ -546,21 +507,14 @@ else if (curBlock !is null)
 }
 ```
 
-Parsing a command and the title command are both fairly simple, so let's look at
-them first.
+Parsing a command and the title command are both fairly simple, so let's look at those first.
 
-To parse a command we first make sure that there is the command name, and any
-arguments. Then we check if the command is part of the list of commands we have.
-If it is, we create a new command object, fill in the name and arguments, and
-add it to the chapter object.
+To parse a command we first make sure that there is the command name, and any arguments. Then we check if the command is part of the list of commands we have. If it is, we create a new command object, fill in the name and arguments, and add it to the chapter object.
 
-We also do something special if it is a `@include` command. For these ones, we
-take the file, read it, and parse it as a chapter (using the `parseChapter` 
-function). Then we add the included chapter's sections to the current chapter's
-sections. In this case, we don't add the `@include` command to the list of chapter commands.
+We also do something special if it is an `@include` command. For these ones, we take the file, read it, and parse it as a chapter (using the `parseChapter` function). Then we add the included chapter's sections to the current chapter's sections. In this case, we don't add the `@include` command to the list of chapter commands.
 
 #### Parse a command
-```d
+```d --- Parse a command ---
 if (line.split().length > 1) 
 {
     if (commands.canFind(line.split()[0])) 
@@ -597,7 +551,7 @@ if (line.split().length > 1)
 Parsing an `@title` command is even simpler.
 
 #### Parse a title command
-```d
+```d --- Parse a title command ---
 if (startsWith(line, "@title")) 
 {
     chapter.title = strip(line[6..$]);
@@ -606,11 +560,9 @@ if (startsWith(line, "@title"))
 
 ### Parse a section definition
 
-When a new section is created (using `#` .. `######`), we should add the current
-section to the list of sections for the chapter, and then we should create a new
-section, which becomes the current one.
+When a new section is created (using `#` .. `######`), we should add the current section to the list of sections for the chapter, and then we should create a new section, which becomes the current one.
 
-```d
+```d --- Parse a section definition ---
 else if (line.startsWith("#")) 
 {
     if (curBlock !is null && !curBlock.isCodeblock) 
@@ -657,7 +609,7 @@ hierarchical structure even inside a chapter - depends on the section's level.
 When we increase the number of a certain level, all lower levels need to be
 zeroed out. The `increaseSectionNum` function does this job for us.
 
-```d
+```d --- Increase section number ---
 void increaseSectionNum(int level) 
 {
     if (level > 5) 
@@ -678,7 +630,7 @@ Codeblocks always begin with three backticks, so we can use a proper regex to
 represent this. Once a new codeblock starts, the old one must be appended to the 
 current section's list of blocks, and the current codeblock must be reset.
 
-```d
+```d --- Parse the beginning of a code block ---
 else if (matchAll(line, regex("^```.+"))) 
 {
     if (curSection is null) 
@@ -692,7 +644,7 @@ else if (matchAll(line, regex("^```.+")))
     curBlock = new Block();
     curBlock.startLine = lineObj;
     curBlock.isCodeblock = true;
-    curBlock.name = curSection.title;
+    // curBlock.name = curSection.title;
 
     @{Parse Modifiers}
 
@@ -732,9 +684,9 @@ else if (matchAll(line, regex("^```.+")))
 }
 ```
 
-### Check for and extract modifiers.
+### Check for and extract modifiers
 
-Modifier format for a code block: `--- Block Name --- noWeave +=`.
+Modifier format for a code block: `--- Block name --- noWeave +=`.
 The `checkForModifiers` ugliness is due to lack of `(?|...)` and friends.
 
 First half matches for expressions *with* modifiers:
@@ -747,16 +699,18 @@ Second half matches for no modifiers: Ether `Block name` and with a floating sep
 
 1. `|(?P<nameb>\S.*?)` : Same thing as #1 but stores it in `nameb`
 2. `[ \t]*?` : Checks for any amount of whitespace (Including none.)
-3. `(-{1,}$` : Checks for any floating `-` and verifies that nothing else is there untill end of line.
+3. `(-{1,}$` : Checks for any floating `-` and verifies that nothing else is there until end of line.
 4. `|$))` : Or just checks that there is nothing but the end of the line after the whitespace.
 
-Returns ether `namea` and `modifiers` or just `nameb`.
+Returns ether `namea` and `modifiers` or just `nameb`, this way 
 
-#### Parse Modifiers
-```d
-auto checkForModifiers = ctRegex!(`(?P<namea>\S.*)[ \t]-{3}[ \t](?P<modifiers>.+)|(?P<nameb>\S.*?)[ \t]*?(-{1,}$|$)`);
+```d --- Parse Modifiers ---
+// auto checkForModifiers = ctRegex!(`[ \t]-{3}[ \t](?P<namea>\S.*)[ \t]-{3}[ \t](?P<modifiers>.+)|(?P<nameb>\S.*?)[ \t]*?(-{1,}$|$)`);
+auto checkForModifiers = ctRegex!(r"```[\S]+[ \t]-{3}[ \t](?P<namea>.+)[ \t]-{3}[ \t](?P<modifiers>.+)|```[\S]+[ \t]-{3}[ \t](?P<nameb>\S.*?)[ \t]*?(-{1,}$|$)");
 auto splitOnSpace = ctRegex!(r"(\s+)");
-auto modMatch = matchFirst(curBlock.name, checkForModifiers);
+auto modMatch = matchFirst(curBlock.startLine.text, checkForModifiers);
+writeln("namea: ", modMatch["namea"]);
+writeln("nameb: ", modMatch["nameb"]);
 
 // matchFirst returns unmatched groups as empty strings
 
@@ -815,8 +769,7 @@ if (modMatch["modifiers"])
 Codeblocks end with just a three backticks. When a codeblock ends, we do the same as when it begins,
 except the new block we create is a block of prose as opposed to code.
 
-#### Begin a new prose block
-```d
+```d --- Begin a new prose block ---
 if (curBlock !is null) curSection.blocks ~= curBlock;
 curBlock = new Block();
 curBlock.startLine = lineObj;
@@ -829,8 +782,7 @@ inCodeblock = false;
 Finally, if the current line is nothing interesting, we just add it to the current block's
 list of lines.
 
-#### Add the line to the list of lines
-```d
+```d --- Add the line to the list of lines ---
 curBlock.lines ~= new Line(line, filename, lineNum);
 ```
 
@@ -843,7 +795,7 @@ chapter yet, so we should do that. Additionally, if the last block is a prose bl
 be closed and added to the section first. If the last block is a code block, it should have been
 closed with three backticks. If it was not, we throw an error.
 
-```d
+```d --- Close the last section ---
 if (curBlock !is null) 
 {
     if (!curBlock.isCodeblock) 
@@ -866,31 +818,30 @@ if (curSection !is null)
 Parsing a change block is somewhat complex. Change blocks look like this:
 
     @change file.lit
-
+    
     Some comments here...
-
+    
     @replace
     replace this text
     @with
     with this text
     @end
-
+    
     More comments ...
-
+    
     @replace
     ...
     @with
     ...
     @end
-
+    
     ...
-
+    
     @change_end
 
-You can make multiple changes on one file. We've got two nice flags for keeping track of
-which kind of block we are in: replaceText or searchText.
+You can make multiple changes on one file. We've got two nice flags for keeping track of which kind of block we are in: replaceText or searchText.
 
-```d
+```d --- Parse change block ---
 // Start a change block
 if (startsWith(line, "@change") && !startsWith(line, "@change_end")) 
 {
@@ -965,8 +916,7 @@ file into one or more Markdown files. The Markdown files created contain proper
 cross references, references to code blocks and can be converted into HTML, PDF
 or any other output formats by e.g. `pandoc`.
 
-## src/weaver.d
-```d
+```d --- src/weaver.d ---
 @{Weaver imports}
 
 void weave(Program p) 
@@ -993,8 +943,7 @@ have four arrays:
 * addLocations: stores the sections in which a codeblock is added to.
 * useLocations: stores the sections in which a codeblock is used;
 
-### Parse use locations
-```d
+```d --- Parse use locations ---
 string[string] defLocations;
 string[][string] redefLocations;
 string[][string] addLocations;
@@ -1052,8 +1001,7 @@ foreach (chapter; p.chapters)
 Here we simply loop through all the chapters in the program and get the Markdown for them.
 If `noOutput` is false, we generate Markdown files in the `outDir`.
 
-## Run weaveChapter
-```d
+```d --- Run weaveChapter ---
 foreach (c; p.chapters) 
 {
     string output = weaveChapter(c, p, defLocations, redefLocations,
@@ -1079,8 +1027,7 @@ If the program being compiled is a book, we should also write a table of content
 The question is whether we need this feature when we drop the html output
 completely... (Robert)
 
-### Create the table of contents
-```d
+```d --- Create the table of contents ---
 string dir = outDir ~ "/_book";
 File f = File(dir ~ "/" ~ p.title ~ "_contents.html", "w");
 
@@ -1151,8 +1098,7 @@ users can put the block name in quotes to force it to be a root block.
 If the block name is in quotes, we have to make sure to remove those once
 we're done.
 
-### Check if it's a root block
-```d
+```d --- Check if it's a root block ---
 auto fileMatch = matchAll(block.name, regex(".*\\.\\w+"));
 auto quoteMatch = matchAll(block.name, regex("^\".*\"$"));
 if (fileMatch || quoteMatch) 
@@ -1166,7 +1112,7 @@ if (fileMatch || quoteMatch)
 
 This function weaves a single chapter.
 
-```d
+```d --- WeaveChapter ---
 string weaveChapter(Chapter c, Program p, string[string] defLocations,
                     string[][string] redefLocations, string[][string] addLocations,
                     string[][string] useLocations) 
@@ -1210,7 +1156,7 @@ This writes out the start of the document. Mainly the scripts (prettify.js)
 and the css (prettiy css, default css, and colorscheme css). It also adds
 the title of the document.
 
-```d 
+```d --- Write the head of the HTML ---
 string prettifyExtension;
 foreach (cmd; p.commands) 
 {
@@ -1306,8 +1252,7 @@ Now we write the body -- this is the meat of the weaver. First we write
 a couple things at the beginning: making sure the `prettyprint` function is
 called when the page loads, and writing out the title as a `p`.
 
-## Write the body
-```d
+```d --- Write the body ---
 output ~= q"DELIMITER
 <body onload="prettyPrint()"  data-spy="scroll" data-target="#toc">
 <div class="row">
@@ -1319,8 +1264,6 @@ DELIMITER";
 output ~= "<p id=\"title\">" ~ c.title ~ "</p>";
 ```
 
-## Write the body +=
-
 Then we loop through each section in the chapter. At the beginning of each 
 section, we write the title, and an empty `a` link so that the section title can
 be linked to.
@@ -1330,14 +1273,19 @@ the section title is empty, then the class should be `noheading` which means
 that the prose will be moved up a bit towards it -- otherwise it looks like
 there is too much empty space between the title and the prose.
 
-```d
-foreach (s; c.sections) 
+```d --- Write the body --- +=
+foreach (section; c.sections) 
 {
-	string noheading = s.title == "" ? " class=\"noheading\"" : "";
-    output ~= "<a name=\"" ~ c.num() ~ ":" ~ s.numToString() ~ "\"><div class=\"section\"><h" ~ to!string(s.level + 1) ~
-              noheading ~ ">" ~ s.numToString() ~ ". " ~ s.title ~ "</h" ~ to!string(s.level + 1) ~ "></a>\n";
+	string noheading = section.title == "" ? " class=\"noheading\"" : "";
+    string sectionID = section.title.strip.toLower.replace(" ", "-");
+    string sectionIDTag = " id=\"" ~ sectionID ~ "\"";
+	if (!section.title.endsWith("+="))
+	{
+        output ~= "<a name=\"" ~ c.num() ~ ":" ~ section.numToString() ~ "\"><div class=\"section\"><h" ~ to!string(section.level + 1) ~
+                  noheading ~ sectionIDTag ~ ">" ~ section.numToString() ~ ". " ~ section.title ~ "</h" ~ to!string(section.level + 1) ~ "></a>\n";
+    }
     
-    foreach (block; s.blocks) 
+    foreach (block; section.blocks) 
     {
         if (!block.modifiers.canFind(Modifier.noWeave)) 
         {
@@ -1369,7 +1317,7 @@ to real dollar signs.
 
 Finally we add this html to the output and add a newline for good measure.
 
-```d
+```d --- Weave a prose block ---
 string html;
 string md;
 
@@ -1440,14 +1388,15 @@ else
 
 ```
 
-### Weave a prose block +=
-```d
+Hm, why did we separate this guy below? ...
+
+```d --- Weave a prose block --- +=
 output ~= html ~ "\n";
 ```
 
 ## Weave a code block
 
-```d
+```d --- Weave a code block ---
 output ~= "<div class=\"codeblock\">\n";
 
 @{Write the title out}
@@ -1466,8 +1415,7 @@ to the definition (which is usually the current block, but sometimes not
 because of `+=`). We also need to make the title bold (`&lt;strong&gt;`) if it
 is a root code block.
 
-#### Write the title out
-```d
+```d --- Write the title out ---
 @{Find the definition location}
 @{Make the title bold if necessary}
 
@@ -1482,8 +1430,7 @@ displayed as `chapterNum:sectionNum` but if it's in the current file, the `chapt
 can be removed. `def` gives us the real definition location, and `defLocation` is the
 one that will be used -- it strips out the `chapterNum` if necessary.
 
-#### Find the definition location
-```d
+```d --- Find the definition location ---
 string chapterNum;
 string def;
 string defLocation;
@@ -1509,8 +1456,7 @@ else
 We also add the `+=` or `:=` if necessary. This needs to be the `extra` because
 it goes outside the `{}` and is not really part of the name anymore.
 
-#### Find the definition location +=
-```d
+```d --- Find the definition location --- +=
 string extra = "";
 if (block.modifiers.canFind(Modifier.additive)) 
 {
@@ -1524,8 +1470,7 @@ else if (block.modifiers.canFind(Modifier.redef))
 
 We simple put the title in in a strong tag if it is a root codeblock to make it bold.
 
-#### Make the title bold if necessary
-```d
+```d --- Make the title bold if necessary ---
 string name;
 if (block.isRootBlock) name = "<strong>" ~ block.name ~ "</strong>";
 else name = block.name;
@@ -1538,8 +1483,7 @@ At the beginning, we open the pre tag. If a codetype is defined, we tell the pre
 to use that, otherwise, the pretty printer will try to figure out how to syntax highlight
 on its own -- and it's pretty good at that.
 
-#### Write the actual code
-```d
+```d --- Write the actual code ---
 if (block.codeType.split().length > 1) 
 {
     if (block.codeType.split()[1].indexOf(".") == -1) 
@@ -1568,8 +1512,7 @@ a codeblock use. Then we have to link to the correct definition location.
 
 Also we escape all ampersands and greater than and less than signs before writing them.
 
-#### Write the line
-```d
+```d --- Write the line ---
 string line = lineObj.text;
 string strippedLine = strip(line);
 if (strippedLine.startsWith("@{") && strippedLine.endsWith("}")) 
@@ -1587,8 +1530,7 @@ reuse the `def` and `defLocation` variables. We also write the final html as
 a span with the `nocode` class, that way it won't be syntax highlighted by the
 pretty printer.
 
-#### Link a used codeblock
-```d
+```d --- Link a used codeblock ---
 def = "";
 defLocation = "";
 if (strip(strippedLine[2..$ - 1]) !in defLocations) 
@@ -1619,8 +1561,7 @@ was defined because we have access to the `sectionLocations` array (which is
 have a few if statements to figure out the grammar -- where to put the `and`
 and whether to have plurals and whatnot.
 
-#### LinkLocations function
-```d
+```d --- LinkLocations function ---
 T[] noDupes(T)(in T[] s) 
 {
     import std.algorithm: canFind;
@@ -1679,9 +1620,8 @@ was defined because we have access to the `addLocations` array. Then we just
 have a few if statements to figure out the grammar -- where to put the `and`
 and whether to have plurals and whatnot.
 
-#### Write the 'added to' links
-```d
-output ~= linkLocations("Added to in section", addLocations, p, c, s, block) ~ "\n";
+```d --- Write the 'added to' links ---
+output ~= linkLocations("Added to in section", addLocations, p, c, section, block) ~ "\n";
 ```
 
 ### Also used in links
@@ -1689,16 +1629,14 @@ output ~= linkLocations("Added to in section", addLocations, p, c, s, block) ~ "
 This is pretty much the same as the 'added to' links except we use the
 `useLocations` array.
 
-#### Write the 'used in' links
-```d
-output ~= linkLocations("Used in section", useLocations, p, c, s, block) ~ "\n";
+```d --- Write the 'used in' links ---
+output ~= linkLocations("Used in section", useLocations, p, c, section, block) ~ "\n";
 ```
 
 ### Redefined in links
 
-#### Write the 'redefined in' links
-```d
-output ~= linkLocations("Redefined in section", redefLocations, p, c, s, block) ~ "\n";
+```d --- Write the 'redefined in' links ---
+output ~= linkLocations("Redefined in section", redefLocations, p, c, section, block) ~ "\n";
 ```
 
 ## Katex source
@@ -1708,16 +1646,14 @@ file. We include a script which uses the cdn first because that will use better 
 it needs the user to be connected to the internet. In the case that the user is offline, we include
 the entire source for katex, but it will use worse fonts (still better than nothing though).
 
-### Write the katex source
-```d
+```d --- Write the katex source ---
 output ~= "<link rel=\"stylesheet\" href=\"https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.1/katex.min.css\">\n" ~
 "<script src=\"https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.1/katex.min.js\"></script>\n";
 ```
 
 Then we loop over all the math divs and spans and render the katex.
 
-### Write the katex source +=
-```d
+```d --- Write the katex source --- +=
 output ~= q"DELIMITER
 <script>
 var mathDivs = document.getElementsByClassName("math")
@@ -1741,7 +1677,12 @@ DELIMITER";
 
 ## prettify
 
-```d
+This is the Javascript component used for source code syntax highlighting. It would be 
+just great to annotate this code too, but for now this seems to be out of scope
+of this project. It would be great however to dig a source of this code on the 
+internet.
+
+```d --- prettify ---
 string prettify = q"DELIMITER
 ! function ()
 {
@@ -2580,7 +2521,7 @@ extensions["ml"] = ocaml;
 ```
 
 ## css
-```d
+```d --- css ---
 string colorschemeCSS = q"DELIMITER
 .pln{color:#1b181b}
 .str{color:#918b3b}
@@ -2695,7 +2636,7 @@ DELIMITER";
 ```
 
 ## Weaver imports
-```d
+```d --- Weaver imports ---
 import globals;
 import std.process;
 import std.file;
@@ -2721,8 +2662,7 @@ link and adding in the code for it.
 
 Here is an overview of the file:
 
-## src/tangler.d
-```d
+```d --- src/tangler.d ---
 import globals;
 import std.string;
 import std.stdio;
@@ -2753,7 +2693,7 @@ root codeblocks, and call `writeCode` from those.
 
 We'll start with these three variables.
 
-```d
+```d --- The tangle function ---
 Block[string] rootCodeblocks;
 Block[string] codeblocks;
 
@@ -2762,8 +2702,7 @@ getCodeblocks(p, codeblocks, rootCodeblocks);
 
 Now we check if there are any root codeblocks.
 
-## The tangle function +=
-```d
+```d --- The tangle function --- +=
 if (rootCodeblocks.length == 0) 
 {
     warn(p.file, 1, "No file codeblocks, not writing any code");
@@ -2775,8 +2714,7 @@ Finally we go through every root codeblock, and run writeCode on it. We open a f
 Then we call `writeCode`, which will recursively follow the links and generate all
 the code.
 
-## The tangle function +=
-```d
+```d --- The tangle function --- +=
 foreach (b; rootCodeblocks) 
 {
     string filename = b.name;
@@ -2793,7 +2731,7 @@ The writeCode function recursively follows the links inside a codeblock and writ
 all the code for a codeblock. It also keeps the leading whitespace to make sure
 indentation in the target file is correct.
 
-```d
+```d --- The writeCode function ---
 void writeCode(Block[string] codeblocks, string blockName, File file, string filename, string whitespace) 
 {
     Block block = codeblocks[blockName];
@@ -2862,9 +2800,7 @@ and finally run tangle or weave (or both) on any input files.
 
 Here is an overview:
 
-## src/main.d
-
-```d
+```d --- src/main.d ---
 @{Main imports}
 
 @{getLinenums function}
@@ -2898,9 +2834,7 @@ All other inputs are input files.
 We also need some variables to store these flags in, and they should be global
 so that the rest of the program can access them.
 
-## Globals
-
-```d
+```d --- Globals ---
 bool tangleOnly;
 bool isBook;
 bool weaveOnly;
@@ -2938,9 +2872,7 @@ into the final HTML then the `noWeave` modifier will do this for you.
 
 Each modifier is represented by this list of enums:
 
-## Modifiers
-
-```d
+```d --- Modifiers ---
 enum Modifier 
 {
     noWeave,
@@ -2953,17 +2885,14 @@ enum Modifier
 
 We'll put these two blocks in their own file for "globals".
 
-## src/globals.d
-```d
+```d --- src/globals.d ---
 @{Globals}
 @{Modifiers}
 ```
 
 Now, to actually parse the arguments:
 
-## Parse the arguments
-
-```d
+```d --- Parse the arguments ---
 for (int i = 1; i < args.length; i++) 
 {
     auto arg = args[i];
@@ -3039,7 +2968,7 @@ for (int i = 1; i < args.length; i++)
 To run literate we go through every file that was passed in, check if it exists,
 and run tangle and weave on it (unless `tangleOnly` or `weaveOnly` was specified).
 
-```d
+```d --- Run Literate ---
 if (files.length > 0) 
 {
     foreach (filename; files) 
@@ -3070,8 +2999,7 @@ The lit function parses the text that is inputted and then either tangles,
 weaves, or both. Finally it Checks for compiler errors if the `--compiler` flag
 was passed.
 
-## lit function
-```d
+```d --- lit function ---
 void lit(string filename, string fileSrc) 
 {
     Program p = new Program();
@@ -3114,7 +3042,7 @@ First we have to get all the codeblocks so that we can backtrack the line number
 from the error message to the correct codeblock. Then we can use the `getLinenums`
 function to get the line numbers for each line in the tangled code.
 
-```d
+```d --- Check for compiler errors ---
 Line[][string] codeLinenums;
 
 Block[string] rootCodeblocks;
@@ -3129,8 +3057,7 @@ foreach (b; rootCodeblocks)
 
 Now we go and check for the `@compiler` command and the `@error_format` command.
 
-## Check for compiler errors +=
-```d
+```d --- Check for compiler errors --- +=
 string compilerCmd;
 string errorFormat;
 Command errorFormatCmd;
@@ -3179,8 +3106,7 @@ Supported compilers/linters are:
 * `rustc`
 * `cargo`
 
-## Check for compiler errors +=
-```d
+```d --- Check for compiler errors --- +=
 if (errorFormat is null) 
 {
     if (compilerCmd.indexOf("clang") != -1) { errorFormat = "%f:%l:%s: %s: %m"; }
@@ -3200,8 +3126,7 @@ matched regular expressions. Then we execute the shell command, parse each error
 using the error format, and rewrite the error with the proper filename and line number
 given by the array `codeLinenums` that we created earlier.
 
-## Check for compiler errors +=
-```d
+```d --- Check for compiler errors --- +=
 if (errorFormat !is null) 
 {
     if (errorFormat.indexOf("%l") != -1 && errorFormat.indexOf("%f") != -1 && errorFormat.indexOf("%m") != -1) 
@@ -3261,7 +3186,7 @@ Here is the `getLinenums` function. It just goes through every block like tangle
 but for each line it adds the line to the array, storing the file and
 line number for that line.
 
-```d
+```d --- getLinenums function ---
 Line[][string] getLinenums(Block[string] codeblocks, string blockName,
                  string rootName, Line[][string] codeLinenums) 
 {
@@ -3296,7 +3221,7 @@ Line[][string] getLinenums(Block[string] codeblocks, string blockName,
 Finally, we also have to add the imports.
 
 ## Main imports
-```d
+```d --- Main imports ---
 import parser;
 import tangler;
 import weaver;
@@ -3317,8 +3242,7 @@ This file contains some utilities for the rest of the literate program.
 It has functions for reading the entire source of a file, and functions
 for reporting errors and warnings.
 
-## src/util.d
-```d
+```d --- src/util.d ---
 import globals;
 import std.stdio;
 import std.conv;
@@ -3341,7 +3265,7 @@ import std.path;
 The `readall` function reads an entire text file, or
 reads from stdin until `control-d` is pressed, and returns the string.
 
-```d
+```d --- Readall function ---
 // Read from a file
 string readall(File file) 
 {
@@ -3365,16 +3289,14 @@ string readall()
 
 These functions simply write errors or warnings to stdout.
 
-### error function
-```d
+```d --- error function ---
 void error(string file, int line, string message) 
 {
     writeln(file, ":", line, ":error: ", message);
 }
 ```
 
-### warning function
-```d
+```d --- warning function ---
 void warn(string file, int line, string message) 
 {
     writeln(file, ":", line, ":warning: ", message);
@@ -3385,7 +3307,7 @@ void warn(string file, int line, string message)
 
 This function returns the leading whitespace of the input string.
 
-```d
+```d --- leadingWS function ---
 string leadingWS(string str) 
 {
     auto firstChar = str.indexOf(strip(str)[0]);
@@ -3405,7 +3327,7 @@ Here we go through every single block in the program, and add it to the
 the `codeblocks` array, and if it matches the filename regex `.*\.\w+`, we add
 it to the `rootCodeblocks` array.
 
-```d
+```d --- getCodeblocks function ---
 void getCodeblocks(Program p, 
                    out Block[string] codeblocks,
                    out Block[string] rootCodeblocks) 
@@ -3485,7 +3407,7 @@ This function returns the html file for a chapter given the major and minor
 numbers for it. The minor and major nums are passed in as a string formatted as:
 `major.minor`.
 
-```d
+```d --- getChapterHtmlFile function ---
 string getChapterHtmlFile(Chapter[] chapters, string num) 
 {
     string[] nums = num.split(".");
@@ -3514,9 +3436,7 @@ seems to be a better overall philosophy to build everything manually than to
 use a system that shadows a lot of the details - this generally hinders
 understanding significantly.
 
-## "Makefile" -comment
-
-```make
+```make --- Makefile -comment ---
 Literate.html: Literate.md
 	bin/lit Literate.md
 

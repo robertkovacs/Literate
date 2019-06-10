@@ -1220,13 +1220,18 @@ output ~= q"DELIMITER
 <div class="col-sm-9">
 DELIMITER";
 output ~= "<p id=\"title\">" ~ c.title ~ "</p>";
-foreach (s; c.sections) 
+foreach (section; c.sections) 
 {
-	string noheading = s.title == "" ? " class=\"noheading\"" : "";
-    output ~= "<a name=\"" ~ c.num() ~ ":" ~ s.numToString() ~ "\"><div class=\"section\"><h" ~ to!string(s.level + 1) ~
-              noheading ~ ">" ~ s.numToString() ~ ". " ~ s.title ~ "</h" ~ to!string(s.level + 1) ~ "></a>\n";
+	string noheading = section.title == "" ? " class=\"noheading\"" : "";
+    string sectionID = section.title.strip.toLower.replace(" ", "-");
+    string sectionIDTag = " id=\"" ~ sectionID ~ "\"";
+	if (!section.title.endsWith("+="))
+	{
+        output ~= "<a name=\"" ~ c.num() ~ ":" ~ section.numToString() ~ "\"><div class=\"section\"><h" ~ to!string(section.level + 1) ~
+                  noheading ~ sectionIDTag ~ ">" ~ section.numToString() ~ ". " ~ section.title ~ "</h" ~ to!string(section.level + 1) ~ "></a>\n";
+    }
     
-    foreach (block; s.blocks) 
+    foreach (block; section.blocks) 
     {
         if (!block.modifiers.canFind(Modifier.noWeave)) 
         {
@@ -1407,13 +1412,13 @@ foreach (s; c.sections)
                 output ~= "</pre>\n";
 
                 // Write the 'added to' links
-                output ~= linkLocations("Added to in section", addLocations, p, c, s, block) ~ "\n";
+                output ~= linkLocations("Added to in section", addLocations, p, c, section, block) ~ "\n";
 
                 // Write the 'redefined in' links
-                output ~= linkLocations("Redefined in section", redefLocations, p, c, s, block) ~ "\n";
+                output ~= linkLocations("Redefined in section", redefLocations, p, c, section, block) ~ "\n";
 
                 // Write the 'used in' links
-                output ~= linkLocations("Used in section", useLocations, p, c, s, block) ~ "\n";
+                output ~= linkLocations("Used in section", useLocations, p, c, section, block) ~ "\n";
 
                 
                 output ~= "</div>\n";
