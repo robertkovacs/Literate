@@ -1486,9 +1486,7 @@ else name = block.name;
 
 ### The actual code
 
-At the beginning, we open the pre tag. If a codetype is defined, we tell the prettyprinter
-to use that, otherwise, the pretty printer will try to figure out how to syntax highlight
-on its own -- and it's pretty good at that.
+At the beginning, we open the pre tag. If a codetype is defined, we tell the prettyprinter to use that, otherwise, the pretty printer will try to figure out how to syntax highlight on its own -- and it's pretty good at that.
 
 ```d --- Write the actual code ---
 if (block.codeType.split().length > 1) 
@@ -1514,8 +1512,7 @@ foreach (lineObj; block.lines)
 output ~= "</pre>\n";
 ```
 
-Now we loop through each line. The only complicated thing here is if the line is
-a codeblock use. Then we have to link to the correct definition location.
+Now we loop through each line. The only complicated thing here is if the line is a codeblock use. Then we have to link to the correct definition location.
 
 Also we escape all ampersands and greater than and less than signs before writing them.
 
@@ -1532,10 +1529,7 @@ else
 }
 ```
 
-For linking the used codeblock, it's pretty much the same deal as before. We
-reuse the `def` and `defLocation` variables. We also write the final html as
-a span with the `nocode` class, that way it won't be syntax highlighted by the
-pretty printer.
+For linking the used codeblock, it's pretty much the same deal as before. We reuse the `def` and `defLocation` variables. We also write the final html as a span with the `nocode` class, that way it won't be syntax highlighted by the pretty printer.
 
 ```d --- Link a used codeblock ---
 def = "";
@@ -1562,11 +1556,7 @@ output ~= "<span class=\"nocode pln\">" ~ leadingWS(line) ~ "{" ~ strippedLine[2
 
 ### Add links to other sections
 
-Writing the links is pretty similar to figuring out where a codeblock
-was defined because we have access to the `sectionLocations` array (which is
-`addLocations`, `useLocations`, or `redefLocations`). Then we just
-have a few if statements to figure out the grammar -- where to put the `and`
-and whether to have plurals and whatnot.
+Writing the links is pretty similar to figuring out where a codeblock was defined because we have access to the `sectionLocations` array (which is `addLocations`, `useLocations`, or `redefLocations`). Then we just have a few if statements to figure out the grammar -- where to put the `and` and whether to have plurals and whatnot.
 
 ```d --- LinkLocations function ---
 T[] noDupes(T)(in T[] s) 
@@ -1622,10 +1612,7 @@ string linkLocations(string text, string[][string] sectionLocations, Program p, 
 
 ### See also links
 
-Writing the 'added to' links is pretty similar to figuring out where a codeblock
-was defined because we have access to the `addLocations` array. Then we just
-have a few if statements to figure out the grammar -- where to put the `and`
-and whether to have plurals and whatnot.
+Writing the 'added to' links is pretty similar to figuring out where a codeblock was defined because we have access to the `addLocations` array. Then we just have a few if statements to figure out the grammar -- where to put the `and` and whether to have plurals and whatnot.
 
 ```d --- Write the 'added to' links ---
 output ~= linkLocations("Added to in section", addLocations, p, c, section, block) ~ "\n";
@@ -1633,8 +1620,7 @@ output ~= linkLocations("Added to in section", addLocations, p, c, section, bloc
 
 ### Also used in links
 
-This is pretty much the same as the 'added to' links except we use the
-`useLocations` array.
+This is pretty much the same as the 'added to' links except we use the `useLocations` array.
 
 ```d --- Write the 'used in' links ---
 output ~= linkLocations("Used in section", useLocations, p, c, section, block) ~ "\n";
@@ -1648,19 +1634,16 @@ output ~= linkLocations("Redefined in section", redefLocations, p, c, section, b
 
 ## Katex source
 
-This is the source code for katex which should only be used if math is used in the literate
-file. We include a script which uses the cdn first because that will use better fonts, however
-it needs the user to be connected to the internet. In the case that the user is offline, we include
-the entire source for katex, but it will use worse fonts (still better than nothing though).
+This is the source code for katex which should only be used if math is used in the literate file. We include a script which uses the cdn first because that will use better fonts, however it needs the user to be connected to the internet. In the case that the user is offline, we include the entire source for katex, but it will use worse fonts (still better than nothing though).
 
 ```d --- Write the katex source ---
 output ~= "<link rel=\"stylesheet\" href=\"https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.1/katex.min.css\">\n" ~
 "<script src=\"https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.1/katex.min.js\"></script>\n";
 ```
 
-Then we loop over all the math divs and spans and render the katex.
+Then we loop over all the math divs and spans and render by katex.
 
-```d --- Write the katex source --- +=
+```d --- Process math by katex ---
 output ~= q"DELIMITER
 <script>
 var mathDivs = document.getElementsByClassName("math")
@@ -1684,10 +1667,7 @@ DELIMITER";
 
 ## prettify
 
-This is the Javascript component used for source code syntax highlighting. It would be 
-just great to annotate this code too, but for now this seems to be out of scope
-of this project. It would be great however to dig a source of this code on the 
-internet.
+This is the Javascript component used for source code syntax highlighting. It would be just great to annotate this code too, but for now this seems to be out of scope for this project. It would be great however to dig a source of this code on the internet.
 
 ```d --- prettify ---
 string prettify = q"DELIMITER
@@ -2528,6 +2508,9 @@ extensions["ml"] = ocaml;
 ```
 
 ## css
+
+Here we determine the style of our HTMl code.
+
 ```d --- css ---
 string colorschemeCSS = q"DELIMITER
 .pln{color:#1b181b}
@@ -2660,12 +2643,7 @@ import dmarkdown;
 
 # Tangle
 
-This is the source for tangle. This compiles code from a `.md` file into runnable code.
-We do this by going through all the codeblocks, and storing them in an associative array.
-Then we apply additions and redefinitions so that the array just contains the code for
-each codeblock (indexed with a string: the codeblock name). Then we find the root codeblocks,
-i.e. the ones that are a filename, and recursively parse all the codeblocks, following each
-link and adding in the code for it.
+This is the source for tangle. This compiles code from a `.md` file into runnable code. We do this by going through all the codeblocks, and storing them in an associative array. Then we apply additions and redefinitions so that the array just contains the code for each codeblock (indexed with a string: the codeblock name). Then we find the root codeblocks, i.e. the ones that are a filename, and recursively parse all the codeblocks, following each link and adding in the code for it.
 
 Here is an overview of the file:
 
@@ -2687,16 +2665,11 @@ void tangle(Program p)
 
 ## Overview
 
-The `tangle` function will take a program in, go through all the chapters, sections
-and find all the codeblocks. It will then apply the codeblock with `+=` and `:=`.
-Another thing it must do is find the root blocks, that is, the files that need
-to be generated. Starting with those, it will recursively write code to a file using
-the `writeCode` function.
+The `tangle` function will take a program in, go through all the chapters, sections and find all the codeblocks. It will then apply the codeblock with `+=` and `:=`. Another thing it must do is find the root blocks, that is, the files that need to be generated. Starting with those, it will recursively write code to a file using the `writeCode` function.
 
 ## The tangle function
 
-The tangle function should find the codeblocks, apply the `+=` and `:=`, find the
-root codeblocks, and call `writeCode` from those.
+The tangle function should find the codeblocks, apply the `+=` and `:=`, find the root codeblocks, and call `writeCode` from those.
 
 We'll start with these three variables.
 
@@ -2716,10 +2689,7 @@ if (rootCodeblocks.length == 0)
 }
 ```
 
-Finally we go through every root codeblock, and run writeCode on it. We open a file
-(making sure it is in `outDir`). We get the `commentString` from the list of commands.
-Then we call `writeCode`, which will recursively follow the links and generate all
-the code.
+Finally we go through every root codeblock, and run writeCode on it. We open a file (making sure it is in `outDir`). We get the `commentString` from the list of commands. Then we call `writeCode`, which will recursively follow the links and generate all the code.
 
 ```d --- The tangle function --- +=
 foreach (b; rootCodeblocks) 
@@ -2734,9 +2704,7 @@ foreach (b; rootCodeblocks)
 
 ## The writeCode function
 
-The writeCode function recursively follows the links inside a codeblock and writes
-all the code for a codeblock. It also keeps the leading whitespace to make sure
-indentation in the target file is correct.
+The writeCode function recursively follows the links inside a codeblock and writes all the code for a codeblock. It also keeps the leading whitespace to make sure indentation in the target file is correct.
 
 ```d --- The writeCode function ---
 void writeCode(Block[string] codeblocks, string blockName, File file, string filename, string whitespace) 
@@ -2801,9 +2769,7 @@ void writeCode(Block[string] codeblocks, string blockName, File file, string fil
 
 # Main
 
-This file contains the source code for `main.d` the file which contains the
-main function for Literate. This will parse any arguments, show help text
-and finally run tangle or weave (or both) on any input files.
+This file contains the source code for `main.d` the file which contains the main function for Literate. This will parse any arguments, show help text and finally run tangle or weave (or both) on any input files.
 
 Here is an overview:
 
@@ -2823,8 +2789,7 @@ void main(in string[] args)
 
 ## Parsing the Arguments
 
-The arguments will consist of either flags or input files. The flags Literate
-accepts are:
+The arguments will consist of either flags or input files. The flags Literate accepts are:
 
 * `--help       -h`          Show the help text
 * `--tangle     -t`          Only run tangle
@@ -2838,8 +2803,7 @@ accepts are:
 
 All other inputs are input files.
 
-We also need some variables to store these flags in, and they should be global
-so that the rest of the program can access them.
+We also need some variables to store these flags in, and they should be global so that the rest of the program can access them.
 
 ```d --- Globals ---
 bool tangleOnly;
@@ -2874,8 +2838,7 @@ Options:
 DELIMITER";
 ```
 
-This program uses a number of block modifiers in order to facilitate certain functionality. For instance, if you don't wish a code block to be woven 
-into the final HTML then the `noWeave` modifier will do this for you.
+This program uses a number of block modifiers in order to facilitate certain functionality. For instance, if you don't wish a code block to be woven into the final HTML then the `noWeave` modifier will do this for you.
 
 Each modifier is represented by this list of enums:
 
@@ -2972,8 +2935,7 @@ for (int i = 1; i < args.length; i++)
 
 ## Run Literate
 
-To run literate we go through every file that was passed in, check if it exists,
-and run tangle and weave on it (unless `tangleOnly` or `weaveOnly` was specified).
+To run literate we go through every file that was passed in, check if it exists, and run tangle and weave on it (unless `tangleOnly` or `weaveOnly` was specified).
 
 ```d --- Run Literate ---
 if (files.length > 0) 
@@ -3002,9 +2964,7 @@ else
 }
 ```
 
-The lit function parses the text that is inputted and then either tangles,
-weaves, or both. Finally it Checks for compiler errors if the `--compiler` flag
-was passed.
+The lit function parses the text that is inputted and then either tangles, weaves, or both. Finally it Checks for compiler errors if the `--compiler` flag was passed.
 
 ```d --- lit function ---
 void lit(string filename, string fileSrc) 
@@ -3045,9 +3005,7 @@ void lit(string filename, string fileSrc)
 
 Here we check for compiler errors.
 
-First we have to get all the codeblocks so that we can backtrack the line numbers
-from the error message to the correct codeblock. Then we can use the `getLinenums`
-function to get the line numbers for each line in the tangled code.
+First we have to get all the codeblocks so that we can backtrack the line numbers from the error message to the correct codeblock. Then we can use the `getLinenums` function to get the line numbers for each line in the tangled code.
 
 ```d --- Check for compiler errors ---
 Line[][string] codeLinenums;
@@ -3098,8 +3056,7 @@ if (p.chapters.length == 1)
 }
 ```
 
-If there is no `@error_format` but the `@compiler` command uses a known compiler, we
-can substitute the error format in.
+If there is no `@error_format` but the `@compiler` command uses a known compiler, we can substitute the error format in.
 
 Supported compilers/linters are:
 
@@ -3128,10 +3085,7 @@ if (errorFormat is null)
 }
 ```
 
-Now we actually go through and create the regex, by replacing the `%l`, `%f`, and `%m` with
-matched regular expressions. Then we execute the shell command, parse each error
-using the error format, and rewrite the error with the proper filename and line number
-given by the array `codeLinenums` that we created earlier.
+Now we actually go through and create the regex, by replacing the `%l`, `%f`, and `%m` with matched regular expressions. Then we execute the shell command, parse each error using the error format, and rewrite the error with the proper filename and line number given by the array `codeLinenums` that we created earlier.
 
 ```d --- Check for compiler errors --- +=
 if (errorFormat !is null) 
@@ -3189,9 +3143,7 @@ if (errorFormat !is null)
 
 ## getLinenums function
 
-Here is the `getLinenums` function. It just goes through every block like tangle would,
-but for each line it adds the line to the array, storing the file and
-line number for that line.
+Here is the `getLinenums` function. It just goes through every block like tangle would, but for each line it adds the line to the array, storing the file and line number for that line.
 
 ```d --- getLinenums function ---
 Line[][string] getLinenums(Block[string] codeblocks, string blockName,
@@ -3246,8 +3198,7 @@ import std.conv;
 
 This file contains some utilities for the rest of the literate program.
 
-It has functions for reading the entire source of a file, and functions
-for reporting errors and warnings.
+It has functions for reading the entire source of a file, and functions for reporting errors and warnings.
 
 ```d --- src/util.d ---
 import globals;
@@ -3269,8 +3220,7 @@ import std.path;
 
 ## Readall function
 
-The `readall` function reads an entire text file, or
-reads from stdin until `control-d` is pressed, and returns the string.
+The `readall` function reads an entire text file, or reads from stdin until `control-d` is pressed, and returns the string.
 
 ```d --- Readall function ---
 // Read from a file
@@ -3324,15 +3274,9 @@ string leadingWS(string str)
 
 ## getCodeblocks function
 
-`tempCodeblocks` is an array that contains only codeblocks that
-have `+=` or `:=`. `rootCodeblocks` and `codeblocks` are both associative arrays
-which will hold more important information. `codeblocks` will contain every
-codeblock after the `+=` and `:=` transformations have been applied.
+`tempCodeblocks` is an array that contains only codeblocks that have `+=` or `:=`. `rootCodeblocks` and `codeblocks` are both associative arrays which will hold more important information. `codeblocks` will contain every codeblock after the `+=` and `:=` transformations have been applied.
 
-Here we go through every single block in the program, and add it to the
-`tempCodeblocks` array if it has a `+=` or `:=`. Otherwise, we add it to
-the `codeblocks` array, and if it matches the filename regex `.*\.\w+`, we add
-it to the `rootCodeblocks` array.
+Here we go through every single block in the program, and add it to the `tempCodeblocks` array if it has a `+=` or `:=`. Otherwise, we add it to the `codeblocks` array, and if it matches the filename regex `.*\.\w+`, we add it to the `rootCodeblocks` array.
 
 ```d --- getCodeblocks function ---
 void getCodeblocks(Program p, 
@@ -3410,9 +3354,7 @@ void getCodeblocks(Program p,
 
 ## getChapterHtmlFile function
 
-This function returns the html file for a chapter given the major and minor
-numbers for it. The minor and major nums are passed in as a string formatted as:
-`major.minor`.
+This function returns the html file for a chapter given the major and minor numbers for it. The minor and major nums are passed in as a string formatted as: `major.minor`.
 
 ```d --- getChapterHtmlFile function ---
 string getChapterHtmlFile(Chapter[] chapters, string num) 
