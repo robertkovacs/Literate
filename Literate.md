@@ -604,10 +604,7 @@ else if (line.startsWith("#"))
 
 #### Increase section number
 
-Section number increase - since we support six levels of sections to have a
-hierarchical structure even inside a chapter - depends on the section's level.
-When we increase the number of a certain level, all lower levels need to be
-zeroed out. The `increaseSectionNum` function does this job for us.
+Section number increase - since we support six levels of sections to have a hierarchical structure even inside a chapter - depends on the section's level. When we increase the number of a certain level, all lower levels need to be zeroed out. The `increaseSectionNum` function does this job for us.
 
 ```d --- Increase section number ---
 void increaseSectionNum(int level) 
@@ -626,9 +623,7 @@ void increaseSectionNum(int level)
 
 ### Parse the beginning of a code block
 
-Codeblocks always begin with three backticks, so we can use a proper regex to
-represent this. Once a new codeblock starts, the old one must be appended to the 
-current section's list of blocks, and the current codeblock must be reset.
+Codeblocks always begin with three backticks, so we can use a proper regex to represent this. Once a new codeblock starts, the old one must be appended to the current section's list of blocks, and the current codeblock must be reset.
 
 ```d --- Parse the beginning of a code block ---
 else if (matchAll(line, regex("^```.+"))) 
@@ -686,8 +681,7 @@ else if (matchAll(line, regex("^```.+")))
 
 ### Check for and extract modifiers
 
-Modifier format for a code block: `--- Block name --- noWeave +=`.
-The `checkForModifiers` ugliness is due to lack of `(?|...)` and friends.
+Modifier format for a code block: `--- Block name --- noWeave +=`. The `checkForModifiers` ugliness is due to lack of `(?|...)` and friends.
 
 First half matches for expressions *with* modifiers:
 
@@ -702,17 +696,25 @@ Second half matches for no modifiers: Ether `Block name` and with a floating sep
 3. `(-{1,}$` : Checks for any floating `-` and verifies that nothing else is there until end of line.
 4. `|$))` : Or just checks that there is nothing but the end of the line after the whitespace.
 
-Returns ether `namea` and `modifiers` or just `nameb`, this way 
+Returns either `namea` and `modifiers` or just `nameb`, this way 
 
 ```d --- Parse Modifiers ---
 // auto checkForModifiers = ctRegex!(`[ \t]-{3}[ \t](?P<namea>\S.*)[ \t]-{3}[ \t](?P<modifiers>.+)|(?P<nameb>\S.*?)[ \t]*?(-{1,}$|$)`);
 auto checkForModifiers = ctRegex!(r"```[\S]+[ \t]-{3}[ \t](?P<namea>.+)[ \t]-{3}[ \t](?P<modifiers>.+)|```[\S]+[ \t]-{3}[ \t](?P<nameb>\S.*?)[ \t]*?(-{1,}$|$)");
 auto splitOnSpace = ctRegex!(r"(\s+)");
 auto modMatch = matchFirst(curBlock.startLine.text, checkForModifiers);
-writeln("namea: ", modMatch["namea"]);
-writeln("nameb: ", modMatch["nameb"]);
+```
 
-// matchFirst returns unmatched groups as empty strings
+These two are here just for debugging purposes.
+
+```d --- Parse Modifiers --- +=
+// writeln("namea: ", modMatch["namea"]);
+// writeln("nameb: ", modMatch["nameb"]);
+```
+
+`matchFirst` returns unmatched groups as empty strings.
+
+```d --- Parse Modifiers --- +=
 
 if (modMatch["namea"] != "") 
 {
@@ -817,31 +819,35 @@ if (curSection !is null)
 
 Parsing a change block is somewhat complex. Change blocks look like this:
 
-    @change file.lit
-    
-    Some comments here...
-    
-    @replace
-    replace this text
-    @with
-    with this text
-    @end
-    
-    More comments ...
-    
-    @replace
-    ...
-    @with
-    ...
-    @end
-    
-    ...
-    
-    @change_end
+```lit --- Change block - example ---
+
+@change file.lit
+
+Some comments here...
+
+@replace
+replace this text
+@with
+with this text
+@end
+
+More comments ...
+
+@replace
+...
+@with
+...
+@end
+
+...
+
+@change_end
+```
 
 You can make multiple changes on one file. We've got two nice flags for keeping track of which kind of block we are in: replaceText or searchText.
 
 ```d --- Parse change block ---
+
 // Start a change block
 if (startsWith(line, "@change") && !startsWith(line, "@change_end")) 
 {
@@ -911,10 +917,7 @@ else if (inReplaceBlock)
 
 # Weaver
 
-Here is an overview of the weave functionality. This file turns a literate source
-file into one or more Markdown files. The Markdown files created contain proper
-cross references, references to code blocks and can be converted into HTML, PDF
-or any other output formats by e.g. `pandoc`.
+Here is an overview of the weave functionality. Here we turn a literate source file into one or more Markdown files. The Markdown files created contain proper cross references, references to code blocks and can be converted into HTML, PDF or any other output formats by e.g. `pandoc`.
 
 ```d --- src/weaver.d ---
 @{Weaver imports}
@@ -935,8 +938,7 @@ void weave(Program p)
 
 ## Parsing Codeblocks
 
-Now we parse the codeblocks across all chapters in the program. We
-have four arrays:
+Now we parse the codeblocks across all chapters in the program. We have four arrays:
 
 * defLocations: stores the section in which a codeblock is defined.
 * redefLocations: stores the sections in which a codeblock is redefined.
@@ -998,13 +1000,12 @@ foreach (chapter; p.chapters)
 }
 ```
 
-Here we simply loop through all the chapters in the program and get the Markdown for them.
-If `noOutput` is false, we generate Markdown files in the `outDir`.
+Here we simply loop through all the chapters in the program and get the Markdown for them. If `noOutput` is false, we generate HTML files in the `outDir`.
 
 ```d --- Run weaveChapter ---
-foreach (c; p.chapters) 
+foreach (chapter; p.chapters) 
 {
-    string output = weaveChapter(c, p, defLocations, redefLocations,
+    string output = weaveChapter(chapter, p, defLocations, redefLocations,
                                  addLocations, useLocations);
     if (!noOutput) 
     {
@@ -1014,7 +1015,7 @@ foreach (c; p.chapters)
             dir = outDir ~ "/_book";
             if (!dir.exists()) mkdir(dir);
         }
-        File f = File(dir ~ "/" ~ stripExtension(baseName(c.file)) ~ ".html", "w");
+        File f = File(dir ~ "/" ~ stripExtension(baseName(chapter.file)) ~ ".html", "w");
         f.write(output);
         f.close();
     }
@@ -1023,9 +1024,7 @@ foreach (c; p.chapters)
 
 ## Table of contents
 
-If the program being compiled is a book, we should also write a table of contents file.
-The question is whether we need this feature when we drop the html output
-completely... (Robert)
+If the program being compiled is a book, we should also write a table of contents file. 
 
 ```d --- Create the table of contents ---
 string dir = outDir ~ "/_book";
@@ -1089,14 +1088,11 @@ f.close();
 
 ```
 
-## Root block check
+## Root code block check
 
-We check if the block is a root code block. We check this using
-a regex that basically checks if it the name has an extension. Additionally,
-users can put the block name in quotes to force it to be a root block.
+We check if the block is a root code block: we check this using a regex that basically checks if it the name has an extension. Additionally, users can put the block name in quotes to force it to be a root code block.
 
-If the block name is in quotes, we have to make sure to remove those once
-we're done.
+If the block name is in quotes, we have to make sure to remove those once we're done.
 
 ```d --- Check if it's a root block ---
 auto fileMatch = matchAll(block.name, regex(".*\\.\\w+"));
@@ -1128,6 +1124,7 @@ string weaveChapter(Chapter c, Program p, string[string] defLocations,
 	if (use_katex) 
 	{
 @{Write the katex source}
+@{Process math by katex}
     }
 
     if (isBook) {
@@ -1152,9 +1149,7 @@ string weaveChapter(Chapter c, Program p, string[string] defLocations,
 
 ## Write the head of the HTML
 
-This writes out the start of the document. Mainly the scripts (prettify.js) 
-and the css (prettiy css, default css, and colorscheme css). It also adds
-the title of the document.
+This writes out the start of the document. Mainly the scripts (prettify.js) and the css (prettify css, default css, and colorscheme css). It also adds the title of the document.
 
 ```d --- Write the head of the HTML ---
 string prettifyExtension;
@@ -1248,9 +1243,7 @@ output ~= "<!DOCTYPE html>\n" ~
 
 ## Parse the Chapter
 
-Now we write the body -- this is the meat of the weaver. First we write
-a couple things at the beginning: making sure the `prettyprint` function is
-called when the page loads, and writing out the title as a `p`.
+Now we write the body -- this is the meat of the weaver. First we write a couple things at the beginning: making sure the `prettyprint` function is called when the page loads, and writing out the title as a `p`.
 
 ```d --- Write the body ---
 output ~= q"DELIMITER
@@ -1264,25 +1257,25 @@ DELIMITER";
 output ~= "<p id=\"title\">" ~ c.title ~ "</p>";
 ```
 
-Then we loop through each section in the chapter. At the beginning of each 
-section, we write the title, and an empty `a` link so that the section title can
-be linked to.
+Then we loop through each section in the chapter. At the beginning of each section, we write the title, and an empty `a` link so that the section title can be linked to.
 
-We also have to determine if the section title should be a `noheading` class. If
-the section title is empty, then the class should be `noheading` which means 
-that the prose will be moved up a bit towards it -- otherwise it looks like
-there is too much empty space between the title and the prose.
+We also have to determine if the section title should be a `noheading` class. If the section title is empty, then the class should be `noheading` which means that the prose will be moved up a bit towards it -- otherwise it looks like there is too much empty space between the title and the prose.
 
 ```d --- Write the body --- +=
 foreach (section; c.sections) 
 {
 	string noheading = section.title == "" ? " class=\"noheading\"" : "";
+```
+
+Then, we create an anchor for the headings. The anchor text is the section title in lower case, and with spaces converted to hyphens.
+
+```d --- Write the body --- +=
     string sectionID = section.title.strip.toLower.replace(" ", "-");
-    string sectionIDTag = " id=\"" ~ sectionID ~ "\"";
+    string sectionIDAttribute = " id=\"" ~ sectionID ~ "\"";
 	if (!section.title.endsWith("+="))
 	{
         output ~= "<a name=\"" ~ c.num() ~ ":" ~ section.numToString() ~ "\"><div class=\"section\"><h" ~ to!string(section.level + 1) ~
-                  noheading ~ sectionIDTag ~ ">" ~ section.numToString() ~ ". " ~ section.title ~ "</h" ~ to!string(section.level + 1) ~ "></a>\n";
+                  noheading ~ sectionIDAttribute ~ ">" ~ section.numToString() ~ ". " ~ section.title ~ "</h" ~ to!string(section.level + 1) ~ "></a>\n";
     }
     
     foreach (block; section.blocks) 
@@ -1310,10 +1303,7 @@ output ~= "</div>\n"; // matches <div class="row">
 
 Weaving a prose block is not very complicated: 
 
-Here we use the same regex to actually perform the substitution. Double dollars 
-mean a block math which means we have to use a div. For inline math (single 
-dollars) we use a span. After that substitution we replace all backslash dollars
-to real dollar signs.
+Here we use the same regex to actually perform the substitution. Double dollars mean a block math which means we have to use a div. For inline math (single dollars) we use a span. After that substitution we replace all backslash dollars to real dollar signs.
 
 Finally we add this html to the output and add a newline for good measure.
 
@@ -1350,12 +1340,38 @@ foreach (lineObj; block.lines)
     }
     md ~= l ~ "\n";
 }
+```
 
-if (md.matchAll(regex(r"(?<!\\)[\$](?<!\\)[\$](.*?)(?<!\\)[\$](?<!\\)[\$]")) || md.matchAll(regex(r"(?<!\\)[\$](.*?)(?<!\\)[\$]"))) 
+Here we have a few regexes that needs some further explanations. Let's analyze the first one: 
+
+```regex --- Double dollar math regex ---
+(?<!\\)[\$](?<!\\)[\$](.*?)(?<!\\)[\$](?<!\\)[\$]
+```
+
+The part 
+
+```regex --- Dollar with no preceding backslash regex ---
+(?<!\\)[\$]
+```
+
+is a negative lookbehind, that matches all dollars, not preceded by backslashes. We have two of these constructs at the beginning, and then two at the end. In the middle, we match literally anything, but in a lazy way. This means that this regex matches expressions like `\$\$a = 1\$\$` (i.e. anything between two dollar signs.).
+
+The second expression does a similar thing for math expressions with single dollar signs (`\$a=1\$`). So here we detect whether we need to use KaTeX.
+
+```d --- Weave a prose block --- +=
+
+auto doubleDollarMathNotation = regex(r"(?<!\\)[\$](?<!\\)[\$](?P<formula>.*?)(?<!\\)[\$](?<!\\)[\$]");
+auto singleDollarMathNotation = regex(r"(?<!\\)[\$](?P<formula>.*?)(?<!\\)[\$]");
+
+if (md.matchAll(doubleDollarMathNotation) || md.matchAll(singleDollarMathNotation)) 
 {
     use_katex = true;
 }
+```
 
+Then, we mark math text by class="math" in the HTML tags. Double dollar notation gets transformed into a `div`, whereas single dollar notation gets transferred into `span`.
+
+```d --- Weave a prose block --- +=
 md = md.replaceAll(regex(r"(?<!\\)[\$](?<!\\)[\$](.*?)(?<!\\)[\$](?<!\\)[\$]", "s"), "<div class=\"math\">$1</div>");
 md = md.replaceAll(regex(r"(?<!\\)[\$](.*?)(?<!\\)[\$]", "s"), "<span class=\"math\">$1</span>");
 md = md.replaceAll(regex(r"\\\$"), "$$");
@@ -1410,10 +1426,7 @@ output ~= "</div>\n";
 
 ### The codeblock title
 
-Here we create the title for the codeblock. For the title, we have to link
-to the definition (which is usually the current block, but sometimes not
-because of `+=`). We also need to make the title bold (`&lt;strong&gt;`) if it
-is a root code block.
+Here we create the title for the codeblock. For the title, we have to link to the definition (which is usually the current block, but sometimes not, because of `+=`). We also need to make the title bold (`&lt;strong&gt;`) if it is a root code block.
 
 ```d --- Write the title out ---
 @{Find the definition location}
@@ -1423,12 +1436,7 @@ output ~= "<span class=\"codeblock_name\">{" ~ name ~
           " <a href=\"" ~ htmlFile ~ "#" ~ def ~ "\">" ~ defLocation ~ "</a>}" ~ extra ~ "</span>\n";
 ```
 
-To find the definition location we use the handy `defLocation` array that we made
-earlier. The reason we have both the variables `def` and `defLocation` is because
-the definition location might be in another chapter, in which case it should be
-displayed as `chapterNum:sectionNum` but if it's in the current file, the `chapterNum`
-can be removed. `def` gives us the real definition location, and `defLocation` is the
-one that will be used -- it strips out the `chapterNum` if necessary.
+To find the definition location we use the handy `defLocation` array that we made earlier. The reason we have both the variables `def` and `defLocation` is because the definition location might be in another chapter, in which case it should be displayed as `chapterNum:sectionNum` but if it's in the current file, the `chapterNum` can be removed. `def` gives us the real definition location, and `defLocation` is the one that will be used -- it strips out the `chapterNum` if necessary.
 
 ```d --- Find the definition location ---
 string chapterNum;
@@ -1453,8 +1461,7 @@ else
 }
 ```
 
-We also add the `+=` or `:=` if necessary. This needs to be the `extra` because
-it goes outside the `{}` and is not really part of the name anymore.
+We also add the `+=` or `:=` if necessary. This needs to be the `extra` because it goes outside the `{}` and is not really part of the name anymore.
 
 ```d --- Find the definition location --- +=
 string extra = "";
@@ -3430,11 +3437,7 @@ string getChapterHtmlFile(Chapter[] chapters, string num)
 
 # How to build
 
-Building Literate is done by a simple Makefile that is edited
-manually. The build dependencies are listed here below in this section. It
-seems to be a better overall philosophy to build everything manually than to
-use a system that shadows a lot of the details - this generally hinders
-understanding significantly.
+Building Literate is done by a simple Makefile that is edited manually. The build dependencies are listed here below in this section. It seems to be a better overall philosophy to build everything manually than to use a system that shadows a lot of the details - this generally hinders understanding significantly.
 
 ```make --- Makefile -comment ---
 Literate.html: Literate.md
