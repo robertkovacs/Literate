@@ -663,9 +663,9 @@ else if (matchAll(line, regex("^```.+")))
         } 
         else if (cmd.name == "@comment_type") 
         {
-            if (curBlock.name.endsWith(" noComment")) 
+            if (curBlock.modifiers.canFind(Modifier.noComment)) 
             {
-                curBlock.name = curBlock.name[0..$-10];
+                // curBlock.name = curBlock.name[0..$-10];
                 curBlock.commentString = "";
             } 
             else 
@@ -758,6 +758,9 @@ if (modMatch["modifiers"])
             case "noTangle":
                 curBlock.modifiers ~= Modifier.noTangle;
                 break;
+            case "noComment":
+                curBlock.modifiers ~= Modifier.noComment;
+                break;
             default:
                 error(filename, lineNum, "Invalid modifier: " ~ m);
                 break;
@@ -768,8 +771,7 @@ if (modMatch["modifiers"])
 
 ### Parse the End of a Codeblock
 
-Codeblocks end with just a three backticks. When a codeblock ends, we do the same as when it begins,
-except the new block we create is a block of prose as opposed to code.
+Codeblocks end with just a three backticks. When a codeblock ends, we do the same as when it begins, except the new block we create is a block of prose as opposed to code.
 
 ```d --- Begin a new prose block ---
 if (curBlock !is null) curSection.blocks ~= curBlock;
@@ -781,8 +783,7 @@ inCodeblock = false;
 
 ### Add the current line
 
-Finally, if the current line is nothing interesting, we just add it to the current block's
-list of lines.
+Finally, if the current line is nothing interesting, we just add it to the current block's list of lines.
 
 ```d --- Add the line to the list of lines ---
 curBlock.lines ~= new Line(line, filename, lineNum);
@@ -792,10 +793,7 @@ Now we're done parsing the line.
 
 ### Close the last section
 
-When the end of the file is reached, the last section has not been closed and added to the
-chapter yet, so we should do that. Additionally, if the last block is a prose block, it should
-be closed and added to the section first. If the last block is a code block, it should have been
-closed with three backticks. If it was not, we throw an error.
+When the end of the file is reached, the last section has not been closed and added to the chapter yet, so we should do that. Additionally, if the last block is a prose block, it should be closed and added to the section first. If the last block is a code block, it should have been closed with three backticks. If it was not, we throw an error.
 
 ```d --- Close the last section ---
 if (curBlock !is null) 
